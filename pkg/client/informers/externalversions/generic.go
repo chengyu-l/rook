@@ -23,6 +23,7 @@ import (
 
 	v1alpha1 "github.com/rook/rook/pkg/apis/cassandra.rook.io/v1alpha1"
 	v1 "github.com/rook/rook/pkg/apis/ceph.rook.io/v1"
+	chubaorookiov1alpha1 "github.com/rook/rook/pkg/apis/chubao.rook.io/v1alpha1"
 	cockroachdbrookiov1alpha1 "github.com/rook/rook/pkg/apis/cockroachdb.rook.io/v1alpha1"
 	edgefsrookiov1 "github.com/rook/rook/pkg/apis/edgefs.rook.io/v1"
 	nfsrookiov1alpha1 "github.com/rook/rook/pkg/apis/nfs.rook.io/v1alpha1"
@@ -85,6 +86,14 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Ceph().V1().CephObjectZoneGroups().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("cephrbdmirrors"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Ceph().V1().CephRBDMirrors().Informer()}, nil
+
+		// Group=chubao.rook.io, Version=v1alpha1
+	case chubaorookiov1alpha1.SchemeGroupVersion.WithResource("chubaoclusters"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Chubao().V1alpha1().ChubaoClusters().Informer()}, nil
+	case chubaorookiov1alpha1.SchemeGroupVersion.WithResource("chubaomonitors"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Chubao().V1alpha1().ChubaoMonitors().Informer()}, nil
+	case chubaorookiov1alpha1.SchemeGroupVersion.WithResource("chubaoobjectstores"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Chubao().V1alpha1().ChubaoObjectStores().Informer()}, nil
 
 		// Group=cockroachdb.rook.io, Version=v1alpha1
 	case cockroachdbrookiov1alpha1.SchemeGroupVersion.WithResource("clusters"):

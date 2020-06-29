@@ -44,6 +44,8 @@ cassandra.%:
 yugabytedb.%:
 	@$(MAKE) -C yugabytedb PLATFORM=$*
 
+chubao.%:
+	@$(MAKE) -C chubao PLATFORM=$*
 
 do.build.images.%: $(foreach i,$(IMAGES), $(i).%);
 

@@ -1,0 +1,33 @@
+#################################################################################################################
+# The deployment for the rook operator
+# Contains the common settings for most Kubernetes deployments.
+# For example, to create the rook-chubao cluster:
+#   kubectl create -f common.yaml
+#   kubectl create -f operator.yaml
+#   kubectl create -f cluster.yaml
+###############################################################################################################
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rook-chubao-operator
+  namespace: rook-chubao-system
+spec:
+  selector:
+    matchLabels:
+      app: rook-chubao-operator
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: rook-chubao-operator
+    spec:
+      serviceAccount: rook-chubao-operator
+      containers:
+        - name: rook-chubao-operator
+          image: chubaofs/cfs-operator:0.0.1
+          imagePullPolicy: IfNotPresent
+          args: ["chubao", "operator"]
+          env:
+          - name: ROOK_CSI_ENABLE_CHUBAOFS
+            value: "false"
