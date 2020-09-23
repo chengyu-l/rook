@@ -47,10 +47,5 @@ func (p *Provisioner) Deploy() error {
 		return err
 	}
 
-	err = p.deployCSINodeDriver()
-	if err != nil {
-		return err
-	}
-
-	return p.deployDefaultStorageClass()
+	return p.deployCSINodeDriver()
 }

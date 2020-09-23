@@ -2,6 +2,7 @@ package provisioner
 
 import (
 	"fmt"
+	"github.com/prometheus/common/log"
 	"github.com/rook/rook/pkg/operator/chubao/commons"
 	"github.com/rook/rook/pkg/operator/chubao/constants"
 	"github.com/rook/rook/pkg/operator/k8sutil"
@@ -65,7 +66,7 @@ func createCSINodePod(p *Provisioner) corev1.PodSpec {
 					{Name: "DRIVER_REG_SOCK_PATH", Value: fmt.Sprintf("%s/plugins/csi.chubaofs.com/csi.sock", p.KubeletPath)},
 					{Name: "KUBE_NODE_NAME", ValueFrom: k8sutil.NameEnvVar().ValueFrom},
 				},
-				Resources: p.CSIProvisioner.Resource,
+				Resources: p.CSIProvisioner.Resources,
 				VolumeMounts: []corev1.VolumeMount{
 					{Name: "socket-dir", MountPath: "/csi"},
 					{Name: "registration-dir", MountPath: "/registration"},
@@ -90,7 +91,7 @@ func createCSINodePod(p *Provisioner) corev1.PodSpec {
 					{Name: "DRIVER_NAME", Value: p.DriverName},
 					{Name: "KUBE_NODE_NAME", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "spec.nodeName"}}},
 				},
-				Resources: p.CSIAttacher.Resource,
+				Resources: p.CSIAttacher.Resources,
 				VolumeMounts: []corev1.VolumeMount{
 					{Name: "socket-dir", MountPath: "/csi"},
 					{Name: "mountpoint-dir", MountPath: fmt.Sprintf("%s/pods", p.KubeletPath), MountPropagation: &mountPropagation},
@@ -130,6 +131,7 @@ func createCSINodePod(p *Provisioner) corev1.PodSpec {
 
 	placement := p.Placement
 	if placement != nil {
+		log.Errorf("Placement:%v", &placement)
 		placement.ApplyToPodSpec(&pod)
 	}
 

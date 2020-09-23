@@ -175,22 +175,22 @@ type ProvisionerSpec struct {
 }
 
 type CSIRegister struct {
-	Image    string                  `json:"image"`
-	Resource v1.ResourceRequirements `json:"resource,omitempty"`
+	Image     string                  `json:"image"`
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type CSIAttacher struct {
-	Image    string                  `json:"image"`
-	Resource v1.ResourceRequirements `json:"resource,omitempty"`
+	Image     string                  `json:"image"`
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type CSIProvisioner struct {
-	Image    string                  `json:"image"`
-	Resource v1.ResourceRequirements `json:"resource,omitempty"`
+	Image     string                  `json:"image"`
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 }
 type CSIChubaoFS struct {
-	Image    string                  `json:"image"`
-	Resource v1.ResourceRequirements `json:"resource,omitempty"`
+	Image     string                  `json:"image"`
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type ConsulSpec struct {
@@ -223,7 +223,7 @@ type DataNodeSpec struct {
 	Disks             []string                `json:"disks"`
 	Zone              string                  `json:"zone,omitempty"`
 	Placement         *rookv1.Placement       `json:"placement,omitempty"`
-	Resource          v1.ResourceRequirements `json:"resource,omitempty"`
+	Resources         v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type MetaNodeSpec struct {
@@ -236,7 +236,7 @@ type MetaNodeSpec struct {
 	RaftReplicaPort   int32                   `json:"raftReplicaPort,omitempty"`
 	Zone              string                  `json:"zone,omitempty"`
 	Placement         *rookv1.Placement       `json:"placement,omitempty"`
-	Resource          v1.ResourceRequirements `json:"resource,omitempty"`
+	Resources         v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // A MasterSpec is the specification of Master component in the ChubaoCluster.
@@ -254,7 +254,7 @@ type MasterSpec struct {
 	ExporterPort        int32                   `json:"exporterPort,omitempty"`
 	MetaNodeReservedMem int64                   `json:"metaNodeReservedMem,omitempty"`
 	Placement           *rookv1.Placement       `json:"placement,omitempty"`
-	Resource            v1.ResourceRequirements `json:"resource,omitempty"`
+	Resources           v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // +genclient
@@ -331,7 +331,7 @@ type ObjectStoreSpec struct {
 	Region       string                  `json:"region"`
 	Domains      string                  `json:"domains,omitempty"`
 	Host         string                  `json:"host,omitempty"`
-	Resource     v1.ResourceRequirements `json:"resource,omitempty"`
+	Resources    v1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type ObjectStoreStatus struct {

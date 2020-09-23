@@ -47,7 +47,7 @@ spec:
   consul:
     port: 8501
     image: consul:1.6.1
-    resource:
+    resources:
       limits:
         cpu: "500m"
         memory: "1024Mi"
@@ -58,14 +58,14 @@ spec:
     driverName: "csi.chubaofs.com"
     kubeletPath: /var/lib/kubelet
     csiChubaoFS:
-    #      image: chubaofs/cfs-csi-driver:2.2.1.110.0
-      resource:
+      image: chubaofs/cfs-csi-driver:2.2.1.110.0
+      resources:
         limits:
           cpu: "500m"
           memory: "1024Mi"
-    #        requests:
-    #          cpu: "500m"
-    #          memory: "1024Mi"
+      #        requests:
+      #          cpu: "500m"
+      #          memory: "1024Mi"
       placement:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -77,7 +77,7 @@ spec:
                       - chubaofs
     csiProvisioner:
     #      image: quay.io/k8scsi/csi-provisioner:v1.6.0
-    #      resource:
+    #      resources:
     #        limits:
     #          cpu: "500m"
     #          memory: "1024Mi"
@@ -86,7 +86,7 @@ spec:
     #          memory: "1024Mi"
     csiAttacher:
     #      image: quay.io/k8scsi/csi-attacher:v2.0.0
-    #      resource:
+    #      resources:
     #        limits:
     #          cpu: "500m"
     #          memory: "1024Mi"
@@ -95,7 +95,7 @@ spec:
     #          memory: "1024Mi"
     csiRegister:
 #      image: quay.io/k8scsi/csi-node-driver-registrar:v1.3.0
-#      resource:
+#      resources:
 #        limits:
 #          cpu: "500m"
 #          memory: "1024Mi"

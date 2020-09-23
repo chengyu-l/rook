@@ -158,7 +158,7 @@ func createPodSpec(dn *DataNode) corev1.PodSpec {
 					{Name: constants.VolumeNameForLogPath, MountPath: constants.DefaultLogPathInContainer},
 					{Name: constants.VolumeNameForDataPath, MountPath: constants.DefaultDataPathInContainer},
 				},
-				Resources: dn.Resource,
+				Resources: dn.Resources,
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{

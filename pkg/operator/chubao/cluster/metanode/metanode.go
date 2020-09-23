@@ -157,7 +157,7 @@ func createPodSpec(mn *MetaNode) corev1.PodSpec {
 					{Name: constants.VolumeNameForLogPath, MountPath: constants.DefaultLogPathInContainer},
 					{Name: constants.VolumeNameForDataPath, MountPath: constants.DefaultDataPathInContainer},
 				},
-				Resources: mn.Resource,
+				Resources: mn.Resources,
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{

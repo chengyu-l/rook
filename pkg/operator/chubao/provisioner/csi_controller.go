@@ -57,7 +57,7 @@ func createCSIControllerPodSpec(p *Provisioner) corev1.PodSpec {
 					{Name: "TZ", Value: "Asia/Shanghai"},
 					{Name: "ADDRESS", Value: "/csi/csi-controller.sock"},
 				},
-				Resources: p.CSIProvisioner.Resource,
+				Resources: p.CSIProvisioner.Resources,
 				VolumeMounts: []corev1.VolumeMount{
 					{Name: "socket-dir", MountPath: "/csi"},
 				},
@@ -76,7 +76,7 @@ func createCSIControllerPodSpec(p *Provisioner) corev1.PodSpec {
 					{Name: "TZ", Value: "Asia/Shanghai"},
 					{Name: "ADDRESS", Value: "/csi/csi-controller.sock"},
 				},
-				Resources: p.CSIAttacher.Resource,
+				Resources: p.CSIAttacher.Resources,
 				VolumeMounts: []corev1.VolumeMount{
 					{Name: "socket-dir", MountPath: "/csi"},
 				},
@@ -101,7 +101,7 @@ func createCSIControllerPodSpec(p *Provisioner) corev1.PodSpec {
 					{Name: "DRIVER_NAME", Value: p.DriverName},
 					{Name: "KUBE_NODE_NAME", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "spec.nodeName"}}},
 				},
-				Resources: p.CSIAttacher.Resource,
+				Resources: p.CSIAttacher.Resources,
 				VolumeMounts: []corev1.VolumeMount{
 					{Name: "socket-dir", MountPath: "/csi"},
 					{Name: "mountpoint-dir", MountPath: fmt.Sprintf("%s/pods", p.KubeletPath), MountPropagation: &mountPropagation},

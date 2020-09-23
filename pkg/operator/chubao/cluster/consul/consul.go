@@ -146,6 +146,9 @@ func createPodSpec(consul *Consul) corev1.PodSpec {
 				SecurityContext: &corev1.SecurityContext{
 					Privileged: &privileged,
 				},
+				Env: []corev1.EnvVar{
+					{Name: "CONSUL_LOCAL_CONFIG", Value: fmt.Sprintf("{\"ports\": {\"http\": %d}}", consul.Port)},
+				},
 				Ports: []corev1.ContainerPort{
 					{
 						Name: "port", ContainerPort: consul.Port, Protocol: corev1.ProtocolTCP,
