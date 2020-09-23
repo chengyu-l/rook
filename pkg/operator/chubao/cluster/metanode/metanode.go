@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	instanceName = "metanode"
+	instanceName = "rook-cfs-metanode"
 )
 
 const (

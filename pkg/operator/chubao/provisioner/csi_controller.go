@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	csiControllerInstanceName = "cfs-csi-controller"
+	csiControllerInstanceName = "rook-cfs-csi-controller"
 )
 
 func (p *Provisioner) deployCSIController() error {

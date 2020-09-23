@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	instanceName             = "master"
+	instanceName             = "rook-cfs-master"
 	defaultMasterServiceName = "master-service"
 )
 

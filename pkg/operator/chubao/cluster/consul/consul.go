@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	instanceName             = "consul"
+	instanceName             = "rook-cfs-consul"
 	defaultConsulServiceName = "consul-service"
 )
 

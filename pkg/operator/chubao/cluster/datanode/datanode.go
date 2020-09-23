@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	instanceName = "datanode"
+	instanceName = "rook-cfs-datanode"
 )
 
 const (

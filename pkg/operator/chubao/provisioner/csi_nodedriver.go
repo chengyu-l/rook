@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	csiDriverInstanceName = "cfs-csi-node"
+	csiDriverInstanceName = "rook-cfs-csi-node"
 )
 
 func csiNodeLabels(clusterName string) map[string]string {
