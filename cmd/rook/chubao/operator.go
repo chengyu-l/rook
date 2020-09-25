@@ -17,13 +17,13 @@ limitations under the License.
 package chubao
 
 import (
-	"github.com/pkg/errors"
 	"github.com/rook/rook/cmd/rook/rook"
-	"github.com/rook/rook/pkg/operator/chubao/controller"
-	"github.com/rook/rook/pkg/operator/k8sutil"
+	"github.com/rook/rook/pkg/operator/chubao"
 	"github.com/rook/rook/pkg/util/flags"
 	"github.com/spf13/cobra"
-	"k8s.io/apiserver/pkg/server"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 var operatorCmd = &cobra.Command{
@@ -48,27 +48,25 @@ func startCluster(cmd *cobra.Command, args []string) error {
 	//	rook.TerminateFatal(errors.Errorf("rook operator namespace is not provided. expose it via downward API in the rook operator manifest file using environment variable %q", k8sutil.PodNamespaceEnvVar))
 	//}
 
-	// Create a channel to receive OS signals
-	stopCh := server.SetupSignalHandler()
-
-	logger.Info("starting Rook Chubao operator")
+	// Initialize signal handler
+	signalChan := make(chan os.Signal, 1)
+	stopChan := make(chan struct{})
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	// Start the controller-runtime Manager.
+	mgrErrorChan := make(chan error)
+	logger.Info("starting Rook Chubao manager")
 	context := rook.NewContext()
-	context.ConfigDir = k8sutil.DataDir
-	context.LogLevel = rook.Cfg.LogLevel
-	//operator := chubao.New(context, operatorNamespace)
-	//err := operator.Run(stopCh)
-	//if err != nil {
-	//	rook.TerminateFatal(errors.Wrap(err, "failed to run operator\n"))
-	//}
-
-	c := controller.New(context, "rook-chubao-controller")
-	err := c.Run(1, stopCh)
-	if err != nil {
-		rook.TerminateFatal(errors.Wrap(err, "failed to run operator\n"))
-	}
+	go chubao.StartManager(context, stopChan, mgrErrorChan)
 
 	// Signal handler to stop the operator
-	<-stopCh
-	logger.Info("shutdown signal received, exiting...")
-	return nil
+	for {
+		select {
+		case <-stopChan:
+			logger.Info("shutdown signal received, exiting...")
+			return nil
+		case err := <-mgrErrorChan:
+			logger.Errorf("gave up to run the operator. %v", err)
+			return err
+		}
+	}
 }

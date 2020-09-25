@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	chubaoapi "github.com/rook/rook/pkg/apis/chubao.rook.io/v1alpha1"
-	"github.com/rook/rook/pkg/clusterd"
 	"github.com/rook/rook/pkg/operator/chubao/cluster/consul"
 	"github.com/rook/rook/pkg/operator/chubao/commons"
 	"github.com/rook/rook/pkg/operator/chubao/constants"
@@ -13,7 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	kubeinformers "k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"strings"
 )
@@ -35,41 +34,37 @@ const (
 
 type Master struct {
 	chubaoapi.MasterSpec
-	namespace           string
-	name                string
-	cluster             *chubaoapi.ChubaoCluster
-	clusterSpec         chubaoapi.ClusterSpec
-	masterObj           chubaoapi.MasterSpec
-	context             *clusterd.Context
-	kubeInformerFactory kubeinformers.SharedInformerFactory
-	ownerRef            metav1.OwnerReference
-	recorder            record.EventRecorder
+	clientSet   kubernetes.Interface
+	recorder    record.EventRecorder
+	ownerRef    metav1.OwnerReference
+	cluster     *chubaoapi.ChubaoCluster
+	clusterSpec chubaoapi.ClusterSpec
+	namespace   string
+	name        string
 }
 
 func New(
-	context *clusterd.Context,
-	kubeInformerFactory kubeinformers.SharedInformerFactory,
+	clientSet kubernetes.Interface,
 	recorder record.EventRecorder,
 	clusterObj *chubaoapi.ChubaoCluster,
 	ownerRef metav1.OwnerReference) *Master {
 	clusterSpec := clusterObj.Spec
 	masterObj := clusterSpec.Master
 	return &Master{
-		MasterSpec:          masterObj,
-		namespace:           clusterObj.Namespace,
-		name:                clusterObj.Name,
-		context:             context,
-		kubeInformerFactory: kubeInformerFactory,
-		recorder:            recorder,
-		cluster:             clusterObj,
-		clusterSpec:         clusterSpec,
-		ownerRef:            ownerRef,
+		MasterSpec:  masterObj,
+		clientSet:   clientSet,
+		recorder:    recorder,
+		cluster:     clusterObj,
+		clusterSpec: clusterSpec,
+		ownerRef:    ownerRef,
+		namespace:   clusterObj.Namespace,
+		name:        clusterObj.Name,
 	}
 }
 
 func (m *Master) Deploy() error {
 	labels := masterLabels(m.cluster.Name)
-	clientSet := m.context.Clientset
+	clientSet := m.clientSet
 
 	service := m.newMasterService(labels)
 	serviceKey := fmt.Sprintf("%s/%s", service.Namespace, service.Name)
@@ -163,7 +158,7 @@ func createPodSpec(m *Master) corev1.PodSpec {
 					{Name: constants.VolumeNameForLogPath, MountPath: constants.DefaultLogPathInContainer},
 					{Name: constants.VolumeNameForDataPath, MountPath: constants.DefaultDataPathInContainer},
 				},
-				Resources: m.masterObj.Resources,
+				Resources: m.Resources,
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{

@@ -38,7 +38,7 @@ func (p *Provisioner) deployCSINodeDriver() error {
 	}
 
 	k8sutil.AddRookVersionLabelToDaemonSet(daemonSet)
-	clientSet := p.context.Clientset
+	clientSet := p.clientSet
 	return k8sutil.CreateDaemonSet(daemonSet.Name, daemonSet.Namespace, clientSet, daemonSet)
 }
 

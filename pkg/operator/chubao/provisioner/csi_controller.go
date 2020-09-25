@@ -31,7 +31,7 @@ func (p *Provisioner) deployCSIController() error {
 		},
 	}
 
-	clientSet := p.context.Clientset
+	clientSet := p.clientSet
 	return k8sutil.CreateDeployment(clientSet, deployment.Name, deployment.Namespace, deployment)
 }
 

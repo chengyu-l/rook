@@ -3,7 +3,6 @@ package datanode
 import (
 	"fmt"
 	chubaoapi "github.com/rook/rook/pkg/apis/chubao.rook.io/v1alpha1"
-	"github.com/rook/rook/pkg/clusterd"
 	"github.com/rook/rook/pkg/operator/chubao/cluster/consul"
 	"github.com/rook/rook/pkg/operator/chubao/cluster/master"
 	"github.com/rook/rook/pkg/operator/chubao/commons"
@@ -13,7 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	kubeinformers "k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	"strings"
 )
@@ -32,40 +31,37 @@ const (
 
 type DataNode struct {
 	chubaoapi.DataNodeSpec
-	namespace           string
-	name                string
-	cluster             *chubaoapi.ChubaoCluster
-	clusterSpec         chubaoapi.ClusterSpec
-	context             *clusterd.Context
-	kubeInformerFactory kubeinformers.SharedInformerFactory
-	ownerRef            metav1.OwnerReference
-	recorder            record.EventRecorder
+	clientSet   kubernetes.Interface
+	cluster     *chubaoapi.ChubaoCluster
+	recorder    record.EventRecorder
+	ownerRef    metav1.OwnerReference
+	clusterSpec chubaoapi.ClusterSpec
+	namespace   string
+	name        string
 }
 
 func New(
-	context *clusterd.Context,
-	kubeInformerFactory kubeinformers.SharedInformerFactory,
+	clientSet kubernetes.Interface,
 	recorder record.EventRecorder,
 	clusterObj *chubaoapi.ChubaoCluster,
 	ownerRef metav1.OwnerReference) *DataNode {
 	clusterSpec := clusterObj.Spec
 	dataNodeObj := clusterSpec.DataNode
 	return &DataNode{
-		DataNodeSpec:        dataNodeObj,
-		namespace:           clusterObj.Namespace,
-		name:                clusterObj.Name,
-		context:             context,
-		kubeInformerFactory: kubeInformerFactory,
-		recorder:            recorder,
-		cluster:             clusterObj,
-		clusterSpec:         clusterSpec,
-		ownerRef:            ownerRef,
+		DataNodeSpec: dataNodeObj,
+		clientSet:    clientSet,
+		namespace:    clusterObj.Namespace,
+		name:         clusterObj.Name,
+		recorder:     recorder,
+		cluster:      clusterObj,
+		clusterSpec:  clusterSpec,
+		ownerRef:     ownerRef,
 	}
 }
 
 func (dn *DataNode) Deploy() error {
 	labels := dataNodeLabels(dn.name)
-	clientSet := dn.context.Clientset
+	clientSet := dn.clientSet
 	daemonSet := dn.newDataNodeDaemonSet(labels)
 	dataNodeKey := fmt.Sprintf("%s/%s", dn.namespace, dn.name)
 	err := k8sutil.CreateDaemonSet(daemonSet.Name, daemonSet.Namespace, clientSet, daemonSet)

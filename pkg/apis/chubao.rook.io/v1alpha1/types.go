@@ -88,10 +88,10 @@ type CleanupPolicy string
 
 const (
 	CleanupPolicyNone             CleanupPolicy = "None"
-	CleanupPolicyDeleteLog        CleanupPolicy = "DeleteLog"
-	CleanupPolicyDeleteData       CleanupPolicy = "DeleteData"
-	CleanupPolicyDeleteDataAndLog CleanupPolicy = "DeleteDataAndLog"
-	CleanupPolicyDeleteDiskData   CleanupPolicy = "DeleteDiskData"
+	//CleanupPolicyDeleteLog        CleanupPolicy = "DeleteLog"
+	//CleanupPolicyDeleteData       CleanupPolicy = "DeleteData"
+	//CleanupPolicyDeleteDataAndLog CleanupPolicy = "DeleteDataAndLog"
+	//CleanupPolicyDeleteDiskData   CleanupPolicy = "DeleteDiskData"
 	CleanupPolicyDeleteAll        CleanupPolicy = "DeleteAll"
 )
 

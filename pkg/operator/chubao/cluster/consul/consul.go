@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	chubaoapi "github.com/rook/rook/pkg/apis/chubao.rook.io/v1alpha1"
-	"github.com/rook/rook/pkg/clusterd"
 	"github.com/rook/rook/pkg/operator/chubao/commons"
 	"github.com/rook/rook/pkg/operator/chubao/constants"
 	"github.com/rook/rook/pkg/operator/k8sutil"
@@ -12,7 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	kubeinformers "k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 )
 
@@ -46,37 +45,34 @@ func GetConsulServiceDomain(namespace string) string {
 
 type Consul struct {
 	chubaoapi.ConsulSpec
-	cluster             *chubaoapi.ChubaoCluster
-	context             *clusterd.Context
-	kubeInformerFactory kubeinformers.SharedInformerFactory
-	ownerRef            metav1.OwnerReference
-	recorder            record.EventRecorder
-	namespace           string
-	name                string
+	clientSet kubernetes.Interface
+	cluster   *chubaoapi.ChubaoCluster
+	recorder  record.EventRecorder
+	ownerRef  metav1.OwnerReference
+	namespace string
+	name      string
 }
 
 func New(
-	context *clusterd.Context,
-	kubeInformerFactory kubeinformers.SharedInformerFactory,
+	clientSet kubernetes.Interface,
 	recorder record.EventRecorder,
 	clusterObj *chubaoapi.ChubaoCluster,
 	ownerRef metav1.OwnerReference) *Consul {
 	consulObj := clusterObj.Spec.Consul
 	return &Consul{
-		context:             context,
-		kubeInformerFactory: kubeInformerFactory,
-		recorder:            recorder,
-		cluster:             clusterObj,
-		ConsulSpec:          consulObj,
-		ownerRef:            ownerRef,
-		namespace:           clusterObj.Namespace,
-		name:                clusterObj.Name,
+		clientSet:  clientSet,
+		recorder:   recorder,
+		cluster:    clusterObj,
+		ConsulSpec: consulObj,
+		ownerRef:   ownerRef,
+		namespace:  clusterObj.Namespace,
+		name:       clusterObj.Name,
 	}
 }
 
 func (consul *Consul) Deploy() error {
 	labels := consulLabels(consul.name)
-	clientSet := consul.context.Clientset
+	clientSet := consul.clientSet
 
 	service := consul.newConsulService(labels)
 	serviceKey := fmt.Sprintf("%s/%s", service.Namespace, service.Name)

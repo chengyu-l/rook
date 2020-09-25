@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/coreos/pkg/capnslog"
 	"github.com/pkg/errors"
-	chubaorookio "github.com/rook/rook/pkg/apis/chubao.rook.io"
 	chubaoapi "github.com/rook/rook/pkg/apis/chubao.rook.io/v1alpha1"
 	informers "github.com/rook/rook/pkg/client/informers/externalversions/chubao.rook.io/v1alpha1"
 	listers "github.com/rook/rook/pkg/client/listers/chubao.rook.io/v1alpha1"
@@ -20,6 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	kubeinformers "k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
@@ -161,28 +161,28 @@ func (e *ClusterEventHandler) deleteCluster(cluster *chubaoapi.ChubaoCluster) er
 
 func (e *ClusterEventHandler) createCluster(cluster *chubaoapi.ChubaoCluster) error {
 	ownerRef := newClusterOwnerRef(cluster)
-	c := consul.New(e.context, e.kubeInformerFactory, e.recorder, cluster, ownerRef)
+	c := consul.New(e.context.Clientset, e.recorder, cluster, ownerRef)
 	if err := c.Deploy(); err != nil {
 		return errors.Wrap(err, "failed to deploy consul")
 	}
 
-	m := master.New(e.context, e.kubeInformerFactory, e.recorder, cluster, ownerRef)
+	m := master.New(e.context.Clientset, e.recorder, cluster, ownerRef)
 	if err := m.Deploy(); err != nil {
 		return errors.Wrap(err, "failed to deploy master")
 	}
 
-	dn := datanode.New(e.context, e.kubeInformerFactory, e.recorder, cluster, ownerRef)
+	dn := datanode.New(e.context.Clientset, e.recorder, cluster, ownerRef)
 	if err := dn.Deploy(); err != nil {
 		return errors.Wrap(err, "failed to deploy datanode")
 	}
 
-	mn := metanode.New(e.context, e.kubeInformerFactory, e.recorder, cluster, ownerRef)
+	mn := metanode.New(e.context.Clientset, e.recorder, cluster, ownerRef)
 	if err := mn.Deploy(); err != nil {
 		return errors.Wrap(err, "failed to deploy metanode")
 	}
 
 	if commons.IsRookCSIEnableChubaoFS() {
-		go startChubaoFSCSI(e.context, e.kubeInformerFactory, e.recorder, cluster, ownerRef)
+		go startChubaoFSCSI(e.context.Clientset, e.recorder, cluster, ownerRef)
 	} else {
 		logger.Infof("not deploy ChubaoFS CSI")
 	}
@@ -190,8 +190,7 @@ func (e *ClusterEventHandler) createCluster(cluster *chubaoapi.ChubaoCluster) er
 	return nil
 }
 
-func startChubaoFSCSI(context *clusterd.Context,
-	kubeInformerFactory kubeinformers.SharedInformerFactory,
+func startChubaoFSCSI(clientSet kubernetes.Interface,
 	recorder record.EventRecorder,
 	clusterObj *chubaoapi.ChubaoCluster,
 	ownerRef metav1.OwnerReference) {
@@ -200,7 +199,7 @@ func startChubaoFSCSI(context *clusterd.Context,
 	})
 
 	logger.Infof("deploy ChubaoFS CSI")
-	provision := provisioner.New(context, kubeInformerFactory, recorder, clusterObj, ownerRef)
+	provision := provisioner.New(clientSet, recorder, clusterObj, ownerRef)
 	if err := provision.Deploy(); err != nil {
 		logger.Errorf("deploy ChubaoFS CSI fail. err:%v", err)
 	}
@@ -208,7 +207,7 @@ func startChubaoFSCSI(context *clusterd.Context,
 
 func newClusterOwnerRef(own metav1.Object) metav1.OwnerReference {
 	return *metav1.NewControllerRef(own, schema.GroupVersionKind{
-		Group:   chubaorookio.CustomResourceGroupName,
+		Group:   chubaoapi.CustomResourceGroup,
 		Version: chubaoapi.Version,
 		Kind:    reflect.TypeOf(chubaoapi.ChubaoCluster{}).Name(),
 	})
