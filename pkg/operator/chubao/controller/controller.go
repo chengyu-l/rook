@@ -9,7 +9,6 @@ import (
 	"github.com/rook/rook/pkg/operator/chubao/cluster"
 	"github.com/rook/rook/pkg/operator/chubao/constants"
 	"github.com/rook/rook/pkg/operator/chubao/monitor"
-	"github.com/rook/rook/pkg/operator/chubao/objectstore"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -28,16 +27,14 @@ var logger = capnslog.NewPackageLogger("github.com/rook/rook", "rook-chubao-cont
 // ClusterController encapsulates all the tools the controller needs
 // in order to talk to the Kubernetes API
 type ClusterController struct {
-	context                 *clusterd.Context
-	rookInformerFactory     rookinformers.SharedInformerFactory
-	kubeInformerFactory     kubeinformers.SharedInformerFactory
-	recorder                record.EventRecorder
-	clusterHandler          *cluster.ClusterEventHandler
-	clusterListerSynced     cache.InformerSynced
-	monitorHandler          *monitor.MonitorEventHandler
-	monitorListerSynced     cache.InformerSynced
-	objectStoreHandler      *objectstore.ObjectStoreEventHandler
-	objectStoreListerSynced cache.InformerSynced
+	context             *clusterd.Context
+	rookInformerFactory rookinformers.SharedInformerFactory
+	kubeInformerFactory kubeinformers.SharedInformerFactory
+	recorder            record.EventRecorder
+	clusterHandler      *cluster.ClusterEventHandler
+	clusterListerSynced cache.InformerSynced
+	monitorHandler      *monitor.MonitorEventHandler
+	monitorListerSynced cache.InformerSynced
 }
 
 // New returns a new ClusterController
@@ -57,7 +54,6 @@ func New(context *clusterd.Context, operatorNamespace string) *ClusterController
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(context.Clientset, 0, kubeinformers.WithTweakListOptions(tweakListOptionsFunc))
 	rookInformerFactory := rookinformers.NewSharedInformerFactory(context.RookClientset, 0)
 	clusterInformer := rookInformerFactory.Chubao().V1alpha1().ChubaoClusters()
-	objectStoreInformer := rookInformerFactory.Chubao().V1alpha1().ChubaoObjectStores()
 	monitorInformer := rookInformerFactory.Chubao().V1alpha1().ChubaoMonitors()
 
 	// Create event broadcaster
@@ -74,20 +70,15 @@ func New(context *clusterd.Context, operatorNamespace string) *ClusterController
 	monitorHandler := monitor.New(context, recorder)
 	monitorInformer.Informer().AddEventHandler(monitorHandler)
 
-	objectStoreHandler := objectstore.New(context, recorder)
-	objectStoreInformer.Informer().AddEventHandler(objectStoreHandler)
-
 	cc := &ClusterController{
-		context:                 context,
-		recorder:                recorder,
-		rookInformerFactory:     rookInformerFactory,
-		kubeInformerFactory:     kubeInformerFactory,
-		clusterHandler:          clusterHandler,
-		clusterListerSynced:     clusterInformer.Informer().HasSynced,
-		monitorHandler:          monitorHandler,
-		monitorListerSynced:     monitorInformer.Informer().HasSynced,
-		objectStoreHandler:      objectStoreHandler,
-		objectStoreListerSynced: objectStoreInformer.Informer().HasSynced,
+		context:             context,
+		recorder:            recorder,
+		rookInformerFactory: rookInformerFactory,
+		kubeInformerFactory: kubeInformerFactory,
+		clusterHandler:      clusterHandler,
+		clusterListerSynced: clusterInformer.Informer().HasSynced,
+		monitorHandler:      monitorHandler,
+		monitorListerSynced: monitorInformer.Informer().HasSynced,
 	}
 
 	return cc
@@ -108,7 +99,6 @@ func (cc *ClusterController) Run(threadnum int, stopCh <-chan struct{}) error {
 		stopCh,
 		cc.clusterListerSynced,
 		cc.monitorListerSynced,
-		cc.objectStoreListerSynced,
 	); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
@@ -117,7 +107,6 @@ func (cc *ClusterController) Run(threadnum int, stopCh <-chan struct{}) error {
 	for i := 0; i < threadnum; i++ {
 		go wait.Until(cc.clusterHandler.RunWorker, time.Second, stopCh)
 		go wait.Until(cc.monitorHandler.RunWorker, time.Second, stopCh)
-		go wait.Until(cc.objectStoreHandler.RunWorker, time.Second, stopCh)
 	}
 	logger.Info("started workers")
 	return nil

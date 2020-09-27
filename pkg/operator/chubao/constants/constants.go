@@ -37,6 +37,7 @@ const (
 	ComponentClient        = "client"
 	ComponentCSIController = "csi-controller"
 	ComponentCSINode       = "csi-node"
+	ComponentObjectStore   = "object-store"
 )
 
 const (

@@ -23,6 +23,7 @@ import (
 	"github.com/rook/rook/pkg/clusterd"
 	"github.com/rook/rook/pkg/operator/chubao/cluster"
 	"github.com/rook/rook/pkg/operator/chubao/commons"
+	"github.com/rook/rook/pkg/operator/chubao/objectstore"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -33,6 +34,7 @@ var logger = capnslog.NewPackageLogger("github.com/rook/rook", "rook-chubao-oper
 // AddToManagerFuncs is a list of functions to add all Controllers to the Manager
 var AddToManagerFuncs = []func(manager.Manager, commons.Context) error{
 	cluster.Add,
+	objectstore.Add,
 }
 
 func StartManager(context *clusterd.Context, stopCh <-chan struct{}, mgrErrorCh chan error) {

@@ -10,7 +10,7 @@ const (
 	defaultLogDirHostPath  = "/var/log/chubao"
 
 	// Master
-	masterDefaultReplicas            = 3
+	masterDefaultReplicas            = 4
 	masterDefaultLogLevel            = "error"
 	masterDefaultRetainLogs          = 2000
 	masterDefaultPort                = 17110

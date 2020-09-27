@@ -87,12 +87,12 @@ const (
 type CleanupPolicy string
 
 const (
-	CleanupPolicyNone             CleanupPolicy = "None"
+	CleanupPolicyNone CleanupPolicy = "None"
 	//CleanupPolicyDeleteLog        CleanupPolicy = "DeleteLog"
 	//CleanupPolicyDeleteData       CleanupPolicy = "DeleteData"
 	//CleanupPolicyDeleteDataAndLog CleanupPolicy = "DeleteDataAndLog"
 	//CleanupPolicyDeleteDiskData   CleanupPolicy = "DeleteDiskData"
-	CleanupPolicyDeleteAll        CleanupPolicy = "DeleteAll"
+	CleanupPolicyDeleteAll CleanupPolicy = "DeleteAll"
 )
 
 type ClusterStatus struct {
@@ -127,6 +127,8 @@ type ClusterSpec struct {
 	// Cannot be updated.
 	// +optional
 	ImagePullPolicy v1.PullPolicy `json:"imagePullPolicy,omitempty"`
+
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
 	// DataDirHostPath defines data path for the component(Master, DataNode, and MetaNode)
 	// It is a host path, if unspecified, defaults to /var/lib/chubao.
@@ -322,16 +324,19 @@ type ChubaoObjectStoreList struct {
 }
 
 type ObjectStoreSpec struct {
-	Replicas     int32                   `json:"replicas,omitempty"`
-	MasterAddr   string                  `json:"masterAddr"`
-	LogLevel     string                  `json:"logLevel,omitempty"`
-	Port         int32                   `json:"port,omitempty"`
-	Prof         int32                   `json:"prof,omitempty"`
-	ExporterPort int32                   `json:"exporterPort,omitempty"`
-	Region       string                  `json:"region"`
-	Domains      string                  `json:"domains,omitempty"`
-	Host         string                  `json:"host,omitempty"`
-	Resources    v1.ResourceRequirements `json:"resources,omitempty"`
+	Image            string                    `json:"image"`
+	ImagePullPolicy  v1.PullPolicy             `json:"imagePullPolicy,omitempty"`
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	Replicas         int32                     `json:"replicas,omitempty"`
+	MasterAddr       string                    `json:"masterAddr"`
+	ConsulURL        string                    `json:"consulURL,omitempty"`
+	LogLevel         string                    `json:"logLevel,omitempty"`
+	Port             int32                     `json:"port,omitempty"`
+	Prof             int32                     `json:"prof,omitempty"`
+	ExporterPort     int32                     `json:"exporterPort,omitempty"`
+	Domains          string                    `json:"domains,omitempty"`
+	Placement        *rookv1.Placement         `json:"placement,omitempty"`
+	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
 }
 
 type ObjectStoreStatus struct {

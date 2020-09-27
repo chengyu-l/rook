@@ -134,6 +134,8 @@ func (consul *Consul) newConsulDeployment(labels map[string]string) *appsv1.Depl
 func createPodSpec(consul *Consul) corev1.PodSpec {
 	privileged := true
 	pod := corev1.PodSpec{
+		PriorityClassName: consul.cluster.Spec.PriorityClassName,
+		ImagePullSecrets:  consul.cluster.Spec.ImagePullSecrets,
 		Containers: []corev1.Container{
 			{
 				Name:            "consul-pod",

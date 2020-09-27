@@ -120,6 +120,7 @@ func createPodSpec(m *Master) corev1.PodSpec {
 		HostPID:           true,
 		DNSPolicy:         corev1.DNSClusterFirstWithHostNet,
 		PriorityClassName: m.clusterSpec.PriorityClassName,
+		ImagePullSecrets:  m.cluster.Spec.ImagePullSecrets,
 		Containers: []corev1.Container{
 			{
 				Name:            "master",

@@ -48,6 +48,8 @@ func createCSINodePod(p *Provisioner) corev1.PodSpec {
 	mountDirHostPathType := corev1.HostPathDirectory
 	mountPropagation := corev1.MountPropagationBidirectional
 	pod := corev1.PodSpec{
+		PriorityClassName: p.cluster.Spec.PriorityClassName,
+		ImagePullSecrets:  p.cluster.Spec.ImagePullSecrets,
 		Containers: []corev1.Container{
 			{
 				Name:            "driver-registrar",
@@ -131,7 +133,6 @@ func createCSINodePod(p *Provisioner) corev1.PodSpec {
 
 	placement := p.Placement
 	if placement != nil {
-		log.Errorf("Placement:%v", &placement)
 		placement.ApplyToPodSpec(&pod)
 	}
 

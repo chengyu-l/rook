@@ -102,9 +102,11 @@ func createPodSpec(dn *DataNode) corev1.PodSpec {
 	privileged := true
 	pathType := corev1.HostPathDirectoryOrCreate
 	pod := &corev1.PodSpec{
-		HostNetwork: true,
-		HostPID:     true,
-		DNSPolicy:   corev1.DNSClusterFirstWithHostNet,
+		HostNetwork:       true,
+		HostPID:           true,
+		DNSPolicy:         corev1.DNSClusterFirstWithHostNet,
+		PriorityClassName: dn.clusterSpec.PriorityClassName,
+		ImagePullSecrets:  dn.cluster.Spec.ImagePullSecrets,
 		InitContainers: []corev1.Container{
 			{
 				Name:            "check-service",
