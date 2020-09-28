@@ -279,8 +279,25 @@ type ChubaoMonitorList struct {
 }
 
 type MonitorSpec struct {
-	ConsulUrl string `json:"consulUrl"`
-	Password  string `json:"password"`
+	Prometheus PrometheusSpec `json:"prometheus,omitempty"`
+	Grafana    GrafanaSpec    `json:"grafana,omitempty"`
+}
+
+type PrometheusSpec struct {
+	Image           string                   `json:"image,omitempty"`
+	Port            int32                    `json:"port,omitempty"`
+	ImagePullPolicy v1.PullPolicy            `json:"imagePullPolicy,omitempty"`
+	Resources       v1.ResourceRequirements  `json:"resources,omitempty"`
+	HostPath        *v1.HostPathVolumeSource `json:"hostPath,omitempty"`
+	ConsulUrl       string                   `json:"consulUrl"`
+}
+
+type GrafanaSpec struct {
+	Image           string                  `json:"image,omitempty"`
+	Port            int32                   `json:"port,omitempty"`
+	ImagePullPolicy v1.PullPolicy           `json:"imagePullPolicy,omitempty"`
+	Resources       v1.ResourceRequirements `json:"resources,omitempty"`
+	PrometheusUrl   string                  `json:"prometheusUrl"`
 }
 
 type GrafanaStatus string
@@ -299,9 +316,18 @@ const (
 	PrometheusStatusUnknown PrometheusStatus = "Unknown"
 )
 
+type ConfigmapStatus string
+
+const (
+	ConfigmapStatusReady   ConfigmapStatus = "Ready"
+	ConfigmapStatusFailure ConfigmapStatus = "Failure"
+	ConfigmapStatusUnknown ConfigmapStatus = "Unknown"
+)
+
 type MonitorStatus struct {
-	Grafana    GrafanaStatus    `json:"grafana"`
-	Prometheus PrometheusStatus `json:"prometheus"`
+	Grafana    GrafanaStatus    `json:"grafanaStatus"`
+	Prometheus PrometheusStatus `json:"prometheusStatus"`
+	Configmap  ConfigmapStatus  `json:"configmapStatus"`
 }
 
 // +genclient

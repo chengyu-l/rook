@@ -67,7 +67,7 @@ func New(context *clusterd.Context, operatorNamespace string) *ClusterController
 	clusterHandler := cluster.New(context, kubeInformerFactory, clusterInformer, recorder)
 	clusterInformer.Informer().AddEventHandler(clusterHandler)
 
-	monitorHandler := monitor.New(context, recorder)
+	monitorHandler := monitor.New(context, kubeInformerFactory, monitorInformer, recorder)
 	monitorInformer.Informer().AddEventHandler(monitorHandler)
 
 	cc := &ClusterController{

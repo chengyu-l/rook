@@ -2,7 +2,7 @@ package provisioner
 
 import (
 	"fmt"
-	"github.com/prometheus/common/log"
+	//	"github.com/prometheus/common/log"
 	"github.com/rook/rook/pkg/operator/chubao/commons"
 	"github.com/rook/rook/pkg/operator/chubao/constants"
 	"github.com/rook/rook/pkg/operator/k8sutil"

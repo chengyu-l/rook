@@ -12,6 +12,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-ini/ini v1.51.1
 	github.com/go-sql-driver/mysql v1.4.1
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/google/go-cmp v0.3.1
 	github.com/google/uuid v1.1.1
 	github.com/icrowley/fake v0.0.0-20180203215853-4178557ae428
@@ -20,7 +21,6 @@ require (
 	github.com/openshift/cluster-api v0.0.0-20191129101638-b09907ac6668
 	github.com/openshift/machine-api-operator v0.2.1-0.20190903202259-474e14e4965a
 	github.com/pkg/errors v0.8.1
-	github.com/prometheus/common v0.6.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0

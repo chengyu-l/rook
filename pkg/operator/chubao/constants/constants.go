@@ -29,6 +29,7 @@ const (
 	ComponentLabel   = "chubao.rook.io/component"
 	ManagedByLabel   = "chubao.rook.io/managed-by"
 	ClusterNameLabel = "chubao.rook.io/cluster"
+	MonitorNameLabel = "chubao.rook.io/monitor"
 
 	ComponentConsul        = "consul"
 	ComponentMaster        = "master"
@@ -38,6 +39,8 @@ const (
 	ComponentCSIController = "csi-controller"
 	ComponentCSINode       = "csi-node"
 	ComponentObjectStore   = "object-store"
+	ComponentGrafana       = "grafana"
+	ComponentPrometheus    = "prometheus"
 )
 
 const (
