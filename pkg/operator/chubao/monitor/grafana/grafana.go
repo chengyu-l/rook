@@ -28,6 +28,8 @@ const (
 	defaultGrafanaServiceName = "grafana-service"
 )
 
+var GrafanaServiceUrl string
+
 type Grafana struct {
 	clientSet  kubernetes.Interface
 	monitorObj *chubaoapi.ChubaoMonitor
@@ -65,6 +67,9 @@ func (grafana *Grafana) Deploy() error {
 		grafana.recorder.Eventf(grafana.monitorObj, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateGrafanaServiceFailed, serviceKey)
 		return errors.Wrapf(err, MessageCreateGrafanaServiceFailed, serviceKey)
 	}
+
+	GrafanaServiceUrl = fmt.Sprintf("http://%s:%d", commons.GetServiceDomain(defaultGrafanaServiceName, grafana.namespace), grafana.grafanaObj.Port)
+
 	grafana.recorder.Eventf(grafana.monitorObj, corev1.EventTypeNormal, constants.SuccessCreated, MessageGrafanaServiceCreated, serviceKey)
 
 	deployment := grafana.newGrafanaDeployment(labels)

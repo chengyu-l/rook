@@ -70,22 +70,20 @@ func (prom *Prometheus) Deploy() error {
 	}
 	prom.recorder.Eventf(prom.monitorObj, corev1.EventTypeNormal, constants.SuccessCreated, MessagePrometheusServiceCreated, serviceKey)
 
-	fmt.Println("create prom service successfully")
-
 	deployment := prom.newPrometheusDeployment(labels)
 	err := k8sutil.CreateDeployment(clientSet, deployment.Name, deployment.Namespace, deployment)
 	prometheusKey := fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name)
 	if err != nil {
-		fmt.Println("create prom deployment successfully")
+		fmt.Println("failed to create prom deployment", err)
 		prom.recorder.Eventf(prom.monitorObj, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreatePrometheusFailed, prometheusKey)
 	}
-	fmt.Println("create prom deployment successfully")
+
 	prom.recorder.Eventf(prom.monitorObj, corev1.EventTypeNormal, constants.SuccessCreated, MessagePrometheusCreated, prometheusKey)
 	return nil
 }
 
-func prometheusLabels(monitorname string) map[string]string {
-	return commons.LabelsForMonitor(constants.ComponentPrometheus, monitorname)
+func prometheusLabels(monitorName string) map[string]string {
+	return commons.LabelsForMonitor(constants.ComponentPrometheus, monitorName)
 }
 
 func (prom *Prometheus) newPrometheusService(labels map[string]string) *corev1.Service {
@@ -142,10 +140,8 @@ func createPodSpec(prometheus *Prometheus) corev1.PodSpec {
 						Name: "port", ContainerPort: prometheus.prometheusObj.Port, Protocol: corev1.ProtocolTCP,
 					},
 				},
-				Resources: prometheus.prometheusObj.Resources,
-				Env:       createEnv(prometheus),
-				// If grafana pod show the err "back-off restarting failed container", run this command to keep the container running ang then run ./run.sh in the container to check real error.
-				//          Command:        []string{"/bin/bash", "-ce", "tail -f /dev/null"},
+				Resources:    prometheus.prometheusObj.Resources,
+				Env:          createEnv(prometheus),
 				VolumeMounts: createVolumeMounts(prometheus),
 			},
 		},
@@ -195,10 +191,10 @@ func createVolumeMounts(prometheus *Prometheus) []corev1.VolumeMount {
 
 func createEnv(prometheus *Prometheus) []corev1.EnvVar {
 	return []corev1.EnvVar{
-		{
-			Name:  "CONSUL_ADDRESS",
-			Value: prometheus.prometheusObj.ConsulUrl,
-		},
+		//		{
+		//			Name:  "CONSUL_ADDRESS",
+		//			Value: prometheus.prometheusObj.ConsulUrl,
+		//		},
 		{
 			Name:  "TZ",
 			Value: " Asia/Shanghai",
