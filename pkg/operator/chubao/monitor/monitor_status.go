@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	chubaoapi "github.com/rook/rook/pkg/apis/chubao.rook.io/v1alpha1"
+	"github.com/rook/rook/pkg/operator/chubao/monitor/grafana"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -15,7 +16,7 @@ import (
 
 var monitorInstance *chubaoapi.ChubaoMonitor
 
-func (e *MonitorEventHandler) startMonitoring(stopCh chan struct{}, mon *chubaoapi.ChubaoMonitor) {
+func (r *ReconcileChubaoMonitor) startMonitoring(stopCh chan struct{}, mon *chubaoapi.ChubaoMonitor) {
 	monitorInstance = mon
 	checkStatus()
 	go wait.Until(checkStatus, time.Second*10, stopCh)
@@ -49,7 +50,8 @@ func checkConfigmapStatus(clt client.Client) {
 }
 
 func checkPromStatus() {
-	resp, err := http.Get("http://prometheus-service.rook-chubao.svc.cluster.local:9090")
+	prometheusServiceUrl := monitor.Spec.Grafana.PrometheusUrl
+	resp, err := http.Get(prometheusServiceUrl)
 	if err != nil {
 		monitorInstance.Status.Prometheus = chubaoapi.PrometheusStatusFailure
 		return
@@ -64,7 +66,8 @@ func checkPromStatus() {
 }
 
 func checkGrafanaStatus() {
-	resp, err := http.Get("http://grafana-service.rook-chubao.svc.cluster.local:3000")
+	grafanaServiceUrl := grafana.GrafanaServiceUrl
+	resp, err := http.Get(grafanaServiceUrl)
 	if err != nil {
 		monitorInstance.Status.Grafana = chubaoapi.GrafanaStatusFailure
 		return

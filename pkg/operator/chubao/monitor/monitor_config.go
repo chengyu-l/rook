@@ -8,6 +8,8 @@ import (
 	"github.com/go-yaml/yaml"
 	chubaoapi "github.com/rook/rook/pkg/apis/chubao.rook.io/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -87,7 +89,7 @@ type consulSdConfigs struct {
 
 var monitor *chubaoapi.ChubaoMonitor
 
-func CreateNewConfigmap(mon *chubaoapi.ChubaoMonitor) error {
+func createNewConfigmap(mon *chubaoapi.ChubaoMonitor) error {
 	cfg := &corev1.ConfigMap{}
 	monitor = mon
 	cfg.Namespace = monitor.Namespace
@@ -98,6 +100,14 @@ func CreateNewConfigmap(mon *chubaoapi.ChubaoMonitor) error {
 	if err != nil {
 		fmt.Println("failed to create client")
 		return err
+	}
+
+	var configmapFound bool
+	err = clt.Get(context.Background(), types.NamespacedName{Name: "monitor-config", Namespace: mon.Namespace}, cfg)
+	if err != nil && errors.IsNotFound(err) {
+		configmapFound = false
+	} else {
+		configmapFound = true
 	}
 
 	err = addPrometheusYml(cfg)
@@ -128,11 +138,18 @@ func CreateNewConfigmap(mon *chubaoapi.ChubaoMonitor) error {
 		return err
 	}
 
-	err = clt.Create(context.Background(), cfg)
-	if err != nil {
-		monitor.Status.Configmap = chubaoapi.ConfigmapStatusFailure
-		fmt.Println(err)
-		return err
+	if configmapFound {
+		err = clt.Update(context.Background(), cfg)
+		if err != nil {
+			monitor.Status.Configmap = chubaoapi.ConfigmapStatusFailure
+			return err
+		}
+	} else {
+		err = clt.Create(context.Background(), cfg)
+		if err != nil {
+			monitor.Status.Configmap = chubaoapi.ConfigmapStatusFailure
+			return err
+		}
 	}
 	monitor.Status.Configmap = chubaoapi.ConfigmapStatusReady
 
