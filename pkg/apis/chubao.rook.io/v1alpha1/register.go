@@ -56,6 +56,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&ChubaoClusterList{},
 		&ChubaoObjectStore{},
 		&ChubaoObjectStoreList{},
+		&ChubaoMonitor{},
+		&ChubaoMonitorList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

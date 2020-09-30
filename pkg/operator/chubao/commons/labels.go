@@ -21,3 +21,11 @@ func CommonLabels(component, clusterName string) map[string]string {
 	labels[constants.ClusterNameLabel] = clusterName
 	return labels
 }
+
+func LabelsForMonitor(component, monitorName string) map[string]string {
+	labels := recommendedLabels()
+	labels[constants.ComponentLabel] = component
+	labels[constants.ManagedByLabel] = reflect.TypeOf(v1alpha1.ChubaoMonitor{}).Name()
+	labels[constants.MonitorNameLabel] = monitorName
+	return labels
+}
