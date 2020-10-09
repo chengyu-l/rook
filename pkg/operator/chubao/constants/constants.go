@@ -41,6 +41,7 @@ const (
 	ComponentObjectStore   = "object-store"
 	ComponentGrafana       = "grafana"
 	ComponentPrometheus    = "prometheus"
+	ComponentConsole       = "console"
 )
 
 const (

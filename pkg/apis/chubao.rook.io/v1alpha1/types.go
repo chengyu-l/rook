@@ -243,11 +243,6 @@ type MetaNodeSpec struct {
 
 // A MasterSpec is the specification of Master component in the ChubaoCluster.
 type MasterSpec struct {
-	// replicas is the desired number of replicas of the given Template.
-	// These are replicas in the sense that they are instantiations of the
-	// same Template, but individual replicas also have a consistent identity.
-	// If unspecified, defaults to 3.
-	// +optional
 	Replicas            int32                   `json:"replicas,omitempty"`
 	LogLevel            string                  `json:"logLevel,omitempty"`
 	RetainLogs          int32                   `json:"retainLogs,omitempty"`
@@ -279,25 +274,39 @@ type ChubaoMonitorList struct {
 }
 
 type MonitorSpec struct {
-	Prometheus PrometheusSpec `json:"prometheus,omitempty"`
-	Grafana    GrafanaSpec    `json:"grafana,omitempty"`
+	Console    ConsoleSpec       `json:"console,omitempty"`
+	Prometheus PrometheusSpec    `json:"prometheus,omitempty"`
+	Grafana    GrafanaSpec       `json:"grafana,omitempty"`
+	Placement  *rookv1.Placement `json:"placement,omitempty"`
 }
 
 type PrometheusSpec struct {
-	Image           string                   `json:"image,omitempty"`
-	Port            int32                    `json:"port,omitempty"`
-	ImagePullPolicy v1.PullPolicy            `json:"imagePullPolicy,omitempty"`
-	Resources       v1.ResourceRequirements  `json:"resources,omitempty"`
-	HostPath        *v1.HostPathVolumeSource `json:"hostPath,omitempty"`
-	ConsulUrl       string                   `json:"consulUrl"`
+	Image            string                    `json:"image,omitempty"`
+	ImagePullPolicy  v1.PullPolicy             `json:"imagePullPolicy,omitempty"`
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	ConsulUrl        string                    `json:"consulUrl"`
+	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
+	HostPath         *v1.HostPathVolumeSource  `json:"hostPath,omitempty"`
 }
 
 type GrafanaSpec struct {
-	Image           string                  `json:"image,omitempty"`
-	Port            int32                   `json:"port,omitempty"`
-	ImagePullPolicy v1.PullPolicy           `json:"imagePullPolicy,omitempty"`
-	Resources       v1.ResourceRequirements `json:"resources,omitempty"`
-	PrometheusUrl   string                  `json:"prometheusUrl"`
+	Image            string                    `json:"image,omitempty"`
+	ImagePullPolicy  v1.PullPolicy             `json:"imagePullPolicy,omitempty"`
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
+}
+
+type ConsoleSpec struct {
+	MasterAddr       string                    `json:"masterAddr"`
+	Replicas         int32                     `json:"replicas,omitempty"`
+	ClusterName      string                    `json:"clusterName,omitempty"`
+	ObjectNodeDomain string                    `json:"objectNodeDomain,omitempty"`
+	LogLevel         string                    `json:"logLevel,omitempty"`
+	Port             int32                     `json:"port,omitempty"`
+	Image            string                    `json:"image"`
+	ImagePullPolicy  v1.PullPolicy             `json:"imagePullPolicy,omitempty"`
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
 }
 
 type GrafanaStatus string

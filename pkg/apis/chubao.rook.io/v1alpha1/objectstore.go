@@ -5,18 +5,18 @@ import (
 )
 
 const (
-	defaultObjectStoreImage = "chubaofs/cfs-server:0.0.1"
-	defaultReplicas         = 3
-	defaultLogLevel         = "error"
-	defaultPort             = 17510
-	defaultProf             = 17520
-	defaultExportPort       = 17550
+	defaultObjectStoreImage      = "chubaofs/cfs-server:0.0.1"
+	defaultObjectStoreReplicas   = 3
+	defaultObjectStoreLogLevel   = "error"
+	defaultObjectStorePort       = 17510
+	defaultObjectStoreProf       = 17520
+	defaultObjectStoreExportPort = 17550
 )
 
 func SetObjectStoreDefault(objectStore *ChubaoObjectStore) {
 	replicas := objectStore.Spec.Replicas
 	if replicas == 0 {
-		objectStore.Spec.Replicas = defaultReplicas
+		objectStore.Spec.Replicas = defaultObjectStoreReplicas
 	}
 
 	image := objectStore.Spec.Image
@@ -31,22 +31,22 @@ func SetObjectStoreDefault(objectStore *ChubaoObjectStore) {
 
 	logLevel := objectStore.Spec.LogLevel
 	if len(logLevel) == 0 {
-		objectStore.Spec.LogLevel = defaultLogLevel
+		objectStore.Spec.LogLevel = defaultObjectStoreLogLevel
 	}
 
 	port := objectStore.Spec.Port
 	if port == 0 {
-		objectStore.Spec.Port = defaultPort
+		objectStore.Spec.Port = defaultObjectStorePort
 	}
 
 	prof := objectStore.Spec.Prof
 	if prof == 0 {
-		objectStore.Spec.Prof = defaultProf
+		objectStore.Spec.Prof = defaultObjectStoreProf
 	}
 
 	exporterPort := objectStore.Spec.ExporterPort
 	if exporterPort == 0 {
-		objectStore.Spec.ExporterPort = defaultExportPort
+		objectStore.Spec.ExporterPort = defaultObjectStoreExportPort
 	}
 
 }

@@ -3,6 +3,7 @@ package monitor
 import (
 	"context"
 	"fmt"
+	"github.com/rook/rook/pkg/operator/chubao/monitor/prometheus"
 	"io/ioutil"
 
 	"github.com/go-yaml/yaml"
@@ -89,7 +90,7 @@ type consulSdConfigs struct {
 
 var monitor *chubaoapi.ChubaoMonitor
 
-func createNewConfigmap(mon *chubaoapi.ChubaoMonitor) error {
+func createNewConfigMap(mon *chubaoapi.ChubaoMonitor) error {
 	cfg := &corev1.ConfigMap{}
 	monitor = mon
 	cfg.Namespace = monitor.Namespace
@@ -114,26 +115,26 @@ func createNewConfigmap(mon *chubaoapi.ChubaoMonitor) error {
 	if err != nil {
 		return err
 	}
-	err = addDatasourceYml(cfg)
+	err = addDatasourceYml(cfg, mon)
 	if err != nil {
 		return err
 	}
-	err = addNewFile("/etc/monitor/grafana/grafana.ini", "grafana.ini", cfg)
-	if err != nil {
-		return err
-	}
-
-	err = addNewFile("/etc/monitor/grafana/init.sh", "init.sh", cfg)
+	err = addNewFile("/etc/grafana/grafana.ini", "grafana.ini", cfg)
 	if err != nil {
 		return err
 	}
 
-	err = addNewFile("/etc/monitor/grafana/dashboards/chubaofs.json", "chubaofs.json", cfg)
+	err = addNewFile("/etc/grafana/init.sh", "init.sh", cfg)
 	if err != nil {
 		return err
 	}
 
-	err = addNewFile("/etc/monitor/grafana/dashboards/dashboard.yml", "dashboard.yml", cfg)
+	err = addNewFile("/etc/grafana/dashboards/chubaofs.json", "chubaofs.json", cfg)
+	if err != nil {
+		return err
+	}
+
+	err = addNewFile("/etc/grafana/dashboards/dashboard.yml", "dashboard.yml", cfg)
 	if err != nil {
 		return err
 	}
@@ -157,7 +158,7 @@ func createNewConfigmap(mon *chubaoapi.ChubaoMonitor) error {
 }
 
 func addPrometheusYml(cfg *corev1.ConfigMap) error {
-	promCfg, err := ioutil.ReadFile("/etc/monitor/prometheus/prometheus.yml")
+	promCfg, err := ioutil.ReadFile("/etc/prometheus/prometheus.yml")
 	if err != nil {
 		return err
 	}
@@ -177,8 +178,8 @@ func addPrometheusYml(cfg *corev1.ConfigMap) error {
 
 }
 
-func addDatasourceYml(cfg *corev1.ConfigMap) error {
-	grafDatasourceCfg, err := ioutil.ReadFile("/etc/monitor/grafana/datasources/datasource.yml")
+func addDatasourceYml(cfg *corev1.ConfigMap, mon *chubaoapi.ChubaoMonitor) error {
+	grafDatasourceCfg, err := ioutil.ReadFile("/etc/grafana/datasources/datasource.yml")
 	if err != nil {
 		return err
 	}
@@ -187,7 +188,7 @@ func addDatasourceYml(cfg *corev1.ConfigMap) error {
 	if err != nil {
 		return err
 	}
-	datasourceCfg.Datasources[0].Url = monitor.Spec.Grafana.PrometheusUrl
+	datasourceCfg.Datasources[0].Url = prometheus.ServiceURLWithPort(mon)
 
 	newDatasourceCfg, err := yaml.Marshal(&datasourceCfg)
 	if err != nil {

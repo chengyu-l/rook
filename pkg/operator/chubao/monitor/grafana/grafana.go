@@ -16,6 +16,11 @@ import (
 )
 
 const (
+	instanceName              = "grafana"
+	defaultGrafanaServiceName = "grafana-service"
+	grafanaPort               = 3000
+	secretName                = "grafana-user-account"
+
 	// message
 	MessageGrafanaCreated        = "Grafana[%s] Deployment created"
 	MessageGrafanaServiceCreated = "Grafana[%s] Service created"
@@ -23,17 +28,12 @@ const (
 	// error message
 	MessageCreateGrafanaServiceFailed = "Failed to create Grafana[%s] Service"
 	MessageCreateGrafanaFailed        = "Failed to create Grafana[%s] Deployment"
-
-	instanceName              = "grafana"
-	defaultGrafanaServiceName = "grafana-service"
 )
 
-var GrafanaServiceUrl string
-
 type Grafana struct {
+	chubaoapi.GrafanaSpec
 	clientSet  kubernetes.Interface
 	monitorObj *chubaoapi.ChubaoMonitor
-	grafanaObj chubaoapi.GrafanaSpec
 	ownerRef   metav1.OwnerReference
 	recorder   record.EventRecorder
 	namespace  string
@@ -45,31 +45,26 @@ func New(
 	recorder record.EventRecorder,
 	monitorObj *chubaoapi.ChubaoMonitor,
 	ownerRef metav1.OwnerReference) *Grafana {
-	grafObj := monitorObj.Spec.Grafana
 	return &Grafana{
-		clientSet:  clientSet,
-		recorder:   recorder,
-		monitorObj: monitorObj,
-		grafanaObj: grafObj,
-		ownerRef:   ownerRef,
-		namespace:  monitorObj.Namespace,
-		name:       monitorObj.Name,
+		GrafanaSpec: monitorObj.Spec.Grafana,
+		clientSet:   clientSet,
+		recorder:    recorder,
+		monitorObj:  monitorObj,
+		ownerRef:    ownerRef,
+		namespace:   monitorObj.Namespace,
+		name:        monitorObj.Name,
 	}
 }
 
 func (grafana *Grafana) Deploy() error {
 	labels := grafanaLabels(grafana.name)
 	clientSet := grafana.clientSet
-
 	service := grafana.newGrafanaService(labels)
 	serviceKey := fmt.Sprintf("%s/%s", service.Namespace, service.Name)
 	if _, err := k8sutil.CreateOrUpdateService(clientSet, grafana.namespace, service); err != nil {
 		grafana.recorder.Eventf(grafana.monitorObj, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateGrafanaServiceFailed, serviceKey)
 		return errors.Wrapf(err, MessageCreateGrafanaServiceFailed, serviceKey)
 	}
-
-	GrafanaServiceUrl = fmt.Sprintf("http://%s:%d", commons.GetServiceDomain(defaultGrafanaServiceName, grafana.namespace), grafana.grafanaObj.Port)
-
 	grafana.recorder.Eventf(grafana.monitorObj, corev1.EventTypeNormal, constants.SuccessCreated, MessageGrafanaServiceCreated, serviceKey)
 
 	deployment := grafana.newGrafanaDeployment(labels)
@@ -91,7 +86,7 @@ func (grafana *Grafana) newGrafanaService(labels map[string]string) *corev1.Serv
 	service.Spec = corev1.ServiceSpec{
 		Ports: []corev1.ServicePort{
 			{
-				Name: "port", Port: grafana.grafanaObj.Port, TargetPort: utilintstr.IntOrString{IntVal: 3000}, Protocol: corev1.ProtocolTCP,
+				Name: "port", Port: 3000, Protocol: corev1.ProtocolTCP,
 			},
 		},
 		Selector: labels,
@@ -124,11 +119,12 @@ func (grafana *Grafana) newGrafanaDeployment(labels map[string]string) *appsv1.D
 func createPodSpec(grafana *Grafana) corev1.PodSpec {
 	privileged := true
 	pod := corev1.PodSpec{
+		ImagePullSecrets: grafana.ImagePullSecrets,
 		Containers: []corev1.Container{
 			{
 				Name:            "grafana-pod",
-				Image:           grafana.grafanaObj.Image,
-				ImagePullPolicy: grafana.grafanaObj.ImagePullPolicy,
+				Image:           grafana.Image,
+				ImagePullPolicy: grafana.ImagePullPolicy,
 				SecurityContext: &corev1.SecurityContext{
 					Privileged: &privileged,
 				},
@@ -137,7 +133,7 @@ func createPodSpec(grafana *Grafana) corev1.PodSpec {
 						Name: "port", ContainerPort: 3000, Protocol: corev1.ProtocolTCP,
 					},
 				},
-				Resources: grafana.grafanaObj.Resources,
+				Resources: grafana.Resources,
 				Env:       createEnv(grafana),
 				// If grafana pod show the err "back-off restarting failed container", run this command to keep the container running ang then run ./run.sh in the container to check the really error.
 				//          Command:        []string{"/bin/bash", "-ce", "tail -f /dev/null"},
@@ -146,6 +142,11 @@ func createPodSpec(grafana *Grafana) corev1.PodSpec {
 			},
 		},
 		Volumes: createVolumes(grafana),
+	}
+
+	placement := grafana.monitorObj.Spec.Placement
+	if placement != nil {
+		placement.ApplyToPodSpec(&pod)
 	}
 
 	return pod
@@ -222,7 +223,7 @@ func createEnv(grafana *Grafana) []corev1.EnvVar {
 			Name: "GF_SECURITY_ADMIN_USER",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{Name: "useraccount"},
+					LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
 					Key:                  "username",
 				},
 			},
@@ -231,8 +232,8 @@ func createEnv(grafana *Grafana) []corev1.EnvVar {
 			Name: "GF_SECURITY_ADMIN_PASSWORD",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{Name: "useraccount"},
-					Key:                  "userpassword",
+					LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+					Key:                  "password",
 				},
 			},
 		},
@@ -248,10 +249,12 @@ func createReadinessProbe(grafana *Grafana) *corev1.Probe {
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: "/login",
-				Port: utilintstr.IntOrString{
-					IntVal: 3000,
-				},
+				Port: utilintstr.FromInt(grafanaPort),
 			},
 		},
 	}
+}
+
+func ServiceURLWithPort(monitorObj *chubaoapi.ChubaoMonitor) string {
+	return fmt.Sprintf("%s:%d", commons.GetServiceDomain(defaultGrafanaServiceName, monitorObj.Namespace), grafanaPort)
 }

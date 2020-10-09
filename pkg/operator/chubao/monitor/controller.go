@@ -9,6 +9,7 @@ import (
 	chubaoapi "github.com/rook/rook/pkg/apis/chubao.rook.io/v1alpha1"
 	"github.com/rook/rook/pkg/operator/chubao/commons"
 	"github.com/rook/rook/pkg/operator/chubao/constants"
+	"github.com/rook/rook/pkg/operator/chubao/monitor/console"
 	"github.com/rook/rook/pkg/operator/chubao/monitor/grafana"
 	"github.com/rook/rook/pkg/operator/chubao/monitor/prometheus"
 	corev1 "k8s.io/api/core/v1"
@@ -31,9 +32,15 @@ const (
 	controllerName = "chubao-monitor-controller"
 
 	// message
-	MessageMonitorCreated = "Monitor[%s] created"
+	MessageConfigMapCreated  = "ConfigMap[%s] created"
+	MessageGrafanaCreated    = "Grafana[%s] created"
+	MessagePrometheusCreated = "Prometheus[%s] created"
+	MessageConsoleCreated    = "Console[%s] created"
 	// error message
-	MessageCreateMonitorFailed = "Failed to create Monitor[%s]"
+	MessageCreateConfigMapFailed  = "Failed to create ConfigMap[%s]"
+	MessageCreateGrafanaFailed    = "Failed to create Grafana[%s]"
+	MessageCreatePrometheusFailed = "Failed to create Prometheus[%s]"
+	MessageCreateConsoleFailed    = "Failed to create Console[%s]"
 )
 
 // Add adds a new Controller based on nodedrain.ReconcileNode and registers the relevant watches and handlers
@@ -107,7 +114,7 @@ func (r *ReconcileChubaoMonitor) Reconcile(request reconcile.Request) (reconcile
 		return reconcile.Result{}, err
 	}
 
-	// This is a new ChubaoMonitor
+	chubaoapi.SetMonitorDefault(monitor)
 	err = r.createMonitor(monitor)
 	return reconcile.Result{}, err
 }
@@ -121,36 +128,36 @@ func (r *ReconcileChubaoMonitor) deleteMonitor(monitor *chubaoapi.ChubaoMonitor)
 }
 
 func (r *ReconcileChubaoMonitor) createMonitor(monitor *chubaoapi.ChubaoMonitor) error {
-
 	ownerRef := newMonitorOwnerRef(monitor)
 	monitorKey := fmt.Sprintf("%s/%s", monitor.Namespace, monitor.Name)
-
-	monitor.Status.Prometheus = chubaoapi.PrometheusStatusUnknown
-	monitor.Status.Grafana = chubaoapi.GrafanaStatusUnknown
-	monitor.Status.Configmap = chubaoapi.ConfigmapStatusUnknown
-	r.Client.Update(context.Background(), monitor)
-
-	err := createNewConfigmap(monitor)
+	err := createNewConfigMap(monitor)
 	if err != nil {
-		r.Recorder.Eventf(monitor, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateMonitorFailed, monitorKey)
+		r.Recorder.Eventf(monitor, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateConfigMapFailed, monitorKey)
 		return errors.Wrap(err, "failed to create configmap")
 	}
+	r.Recorder.Eventf(monitor, corev1.EventTypeNormal, constants.SuccessCreated, MessageConfigMapCreated, monitorKey)
 
-	c := prometheus.New(r.ClientSet, r.Recorder, monitor, ownerRef)
-	if err := c.Deploy(); err != nil {
-		r.Recorder.Eventf(monitor, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateMonitorFailed, monitorKey)
+	p := prometheus.New(r.ClientSet, r.Recorder, monitor, ownerRef)
+	if err := p.Deploy(); err != nil {
+		r.Recorder.Eventf(monitor, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreatePrometheusFailed, monitorKey)
 		return errors.Wrap(err, "failed to deploy prometheus")
 	}
+	r.Recorder.Eventf(monitor, corev1.EventTypeNormal, constants.SuccessCreated, MessagePrometheusCreated, monitorKey)
 
 	m := grafana.New(r.ClientSet, r.Recorder, monitor, ownerRef)
 	if err := m.Deploy(); err != nil {
-		r.Recorder.Eventf(monitor, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateMonitorFailed, monitorKey)
+		r.Recorder.Eventf(monitor, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateGrafanaFailed, monitorKey)
 		return errors.Wrap(err, "failed to deploy grafana")
 	}
-	r.Recorder.Eventf(monitor, corev1.EventTypeNormal, constants.SuccessCreated, MessageMonitorCreated, monitorKey)
+	r.Recorder.Eventf(monitor, corev1.EventTypeNormal, constants.SuccessCreated, MessageGrafanaCreated, monitorKey)
 
-	r.startMonitoring(r.stopCh, monitor)
-
+	c := console.New(r.ClientSet, r.Recorder, monitor, ownerRef)
+	if err := c.Deploy(); err != nil {
+		r.Recorder.Eventf(monitor, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateConsoleFailed, monitorKey)
+		return errors.Wrap(err, "failed to deploy console")
+	}
+	r.Recorder.Eventf(monitor, corev1.EventTypeNormal, constants.SuccessCreated, MessageConsoleCreated, monitorKey)
+	//r.startMonitoring(r.stopCh, monitor)
 	return nil
 }
 
