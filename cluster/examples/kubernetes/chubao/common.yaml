@@ -92,6 +92,19 @@ rules:
       - secrets
     verbs:
       - "*"
+  - apiGroups:
+      - extensions
+      - networking.k8s.io   # k8s 1.14+
+    resources:
+      - ingresses
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
 ---
 # ServiceAccount for chubao-operator. Serves as its authorization identity.
 apiVersion: v1

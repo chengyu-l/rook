@@ -18,15 +18,15 @@ import (
 )
 
 const (
-	instanceName              = "rook-cfs-console"
-	defaultConsoleServiceName = "console-service"
+	instanceName       = "rook-cfs-console"
+	DefaultServiceName = "console-service"
+	DefaultDomain      = "console.chubaofs.com"
 )
 
 const (
 	// message
 	MessageConsoleCreated        = "Console[%s] Deployment created"
 	MessageConsoleServiceCreated = "Console[%s] Service created"
-
 	// error message
 	MessageCreateConsoleServiceFailed = "Failed to create Console[%s] Service"
 	MessageCreateConsoleFailed        = "Failed to create Console[%s] Deployment"
@@ -76,6 +76,7 @@ func (c *Console) Deploy() error {
 	objectStoreKey := fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name)
 	if err != nil {
 		c.recorder.Eventf(c.monitorObj, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateConsoleFailed, objectStoreKey)
+		return errors.Wrapf(err, MessageCreateConsoleFailed, serviceKey)
 	}
 	c.recorder.Eventf(c.monitorObj, corev1.EventTypeNormal, constants.SuccessCreated, MessageConsoleCreated, objectStoreKey)
 	return nil
@@ -86,7 +87,7 @@ func objectStoreLabels(clusterName string) map[string]string {
 }
 
 func (c *Console) newConsoleService(labels map[string]string) *corev1.Service {
-	service := commons.NewCoreV1Service(defaultConsoleServiceName, c.namespace, &c.ownerRef, labels)
+	service := commons.NewCoreV1Service(DefaultServiceName, c.namespace, &c.ownerRef, labels)
 	service.Spec = corev1.ServiceSpec{
 		Ports: []corev1.ServicePort{
 			{
@@ -136,14 +137,15 @@ func createPodSpec(c *Console) corev1.PodSpec {
 				},
 				Args: []string{
 					"-c",
-					"/cfs/bin/start.sh objectnode; sleep 999999999d",
+					"/cfs/bin/start.sh console; sleep 999999999d",
 				},
 				Env: []corev1.EnvVar{
+					{Name: "CBFS_CLUSTER_NAME", Value: c.ClusterName},
 					{Name: "CBFS_MASTER_ADDRS", Value: c.MasterAddr},
 					{Name: "OBJECT_NODE_DOMAIN", Value: c.ObjectNodeDomain},
 					{Name: "CBFS_PORT", Value: fmt.Sprintf("%d", c.Port)},
 					{Name: "CBFS_LOG_LEVEL", Value: c.LogLevel},
-					{Name: "CBFS_GRAFANA_URL", Value: grafana.ServiceURLWithPort(c.monitorObj)},
+					{Name: "CBFS_GRAFANA_URL", Value: fmt.Sprintf("http://%s", grafana.DefaultDomain)},
 					{Name: "CBFS_PROMETHEUS_ADDR", Value: prometheus.ServiceURLWithPort(c.monitorObj)},
 					k8sutil.PodIPEnvVar("POD_IP"),
 					k8sutil.NameEnvVar(),

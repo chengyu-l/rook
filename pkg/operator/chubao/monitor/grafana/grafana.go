@@ -16,15 +16,17 @@ import (
 )
 
 const (
-	instanceName              = "grafana"
-	defaultGrafanaServiceName = "grafana-service"
-	grafanaPort               = 3000
-	secretName                = "grafana-user-account"
+	InstanceName       = "grafana"
+	DefaultServiceName = "grafana-service"
+	DefaultPort        = 3000
+	DefaultDomain      = "monitor.chubaofs.com"
+	SecretName         = "grafana-user-account"
+)
 
+const (
 	// message
 	MessageGrafanaCreated        = "Grafana[%s] Deployment created"
 	MessageGrafanaServiceCreated = "Grafana[%s] Service created"
-
 	// error message
 	MessageCreateGrafanaServiceFailed = "Failed to create Grafana[%s] Service"
 	MessageCreateGrafanaFailed        = "Failed to create Grafana[%s] Deployment"
@@ -72,9 +74,10 @@ func (grafana *Grafana) Deploy() error {
 	grafanaKey := fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name)
 	if err != nil {
 		grafana.recorder.Eventf(grafana.monitorObj, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateGrafanaFailed, grafanaKey)
+		return errors.Wrapf(err, MessageCreateGrafanaFailed, serviceKey)
 	}
 	grafana.recorder.Eventf(grafana.monitorObj, corev1.EventTypeNormal, constants.SuccessCreated, MessageGrafanaCreated, grafanaKey)
-	return nil
+	return err
 }
 
 func grafanaLabels(monitorName string) map[string]string {
@@ -82,7 +85,7 @@ func grafanaLabels(monitorName string) map[string]string {
 }
 
 func (grafana *Grafana) newGrafanaService(labels map[string]string) *corev1.Service {
-	service := commons.NewCoreV1Service(defaultGrafanaServiceName, grafana.namespace, &grafana.ownerRef, labels)
+	service := commons.NewCoreV1Service(DefaultServiceName, grafana.namespace, &grafana.ownerRef, labels)
 	service.Spec = corev1.ServiceSpec{
 		Ports: []corev1.ServicePort{
 			{
@@ -95,7 +98,7 @@ func (grafana *Grafana) newGrafanaService(labels map[string]string) *corev1.Serv
 }
 
 func (grafana *Grafana) newGrafanaDeployment(labels map[string]string) *appsv1.Deployment {
-	deployment := commons.NewAppV1Deployment(instanceName, grafana.namespace, &grafana.ownerRef, labels)
+	deployment := commons.NewAppV1Deployment(InstanceName, grafana.namespace, &grafana.ownerRef, labels)
 	replicas := int32(1)
 	deployment.Spec = appsv1.DeploymentSpec{
 		Replicas: &replicas,
@@ -122,7 +125,7 @@ func createPodSpec(grafana *Grafana) corev1.PodSpec {
 		ImagePullSecrets: grafana.ImagePullSecrets,
 		Containers: []corev1.Container{
 			{
-				Name:            "grafana-pod",
+				Name:            "grafana",
 				Image:           grafana.Image,
 				ImagePullPolicy: grafana.ImagePullPolicy,
 				SecurityContext: &corev1.SecurityContext{
@@ -133,10 +136,8 @@ func createPodSpec(grafana *Grafana) corev1.PodSpec {
 						Name: "port", ContainerPort: 3000, Protocol: corev1.ProtocolTCP,
 					},
 				},
-				Resources: grafana.Resources,
-				Env:       createEnv(grafana),
-				// If grafana pod show the err "back-off restarting failed container", run this command to keep the container running ang then run ./run.sh in the container to check the really error.
-				//          Command:        []string{"/bin/bash", "-ce", "tail -f /dev/null"},
+				Resources:      grafana.Resources,
+				Env:            createEnv(grafana),
 				ReadinessProbe: createReadinessProbe(grafana),
 				VolumeMounts:   createVolumeMounts(grafana),
 			},
@@ -154,7 +155,6 @@ func createPodSpec(grafana *Grafana) corev1.PodSpec {
 
 func createVolumes(grafana *Grafana) []corev1.Volume {
 	var defaultmode int32 = 0555
-
 	return []corev1.Volume{
 		{
 			Name: "monitor-config",
@@ -167,20 +167,11 @@ func createVolumes(grafana *Grafana) []corev1.Volume {
 				},
 			},
 		},
-		{Name: "grafana-persistent-storage",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
 	}
 }
 
 func createVolumeMounts(grafana *Grafana) []corev1.VolumeMount {
 	return []corev1.VolumeMount{
-		{
-			Name:      "grafana-persistent-storage",
-			MountPath: "/var/lib/grafana",
-		},
 		{
 			Name:      "monitor-config",
 			MountPath: "/grafana/init.sh",
@@ -223,7 +214,7 @@ func createEnv(grafana *Grafana) []corev1.EnvVar {
 			Name: "GF_SECURITY_ADMIN_USER",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+					LocalObjectReference: corev1.LocalObjectReference{Name: SecretName},
 					Key:                  "username",
 				},
 			},
@@ -232,7 +223,7 @@ func createEnv(grafana *Grafana) []corev1.EnvVar {
 			Name: "GF_SECURITY_ADMIN_PASSWORD",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+					LocalObjectReference: corev1.LocalObjectReference{Name: SecretName},
 					Key:                  "password",
 				},
 			},
@@ -249,12 +240,8 @@ func createReadinessProbe(grafana *Grafana) *corev1.Probe {
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: "/login",
-				Port: utilintstr.FromInt(grafanaPort),
+				Port: utilintstr.FromInt(DefaultPort),
 			},
 		},
 	}
-}
-
-func ServiceURLWithPort(monitorObj *chubaoapi.ChubaoMonitor) string {
-	return fmt.Sprintf("%s:%d", commons.GetServiceDomain(defaultGrafanaServiceName, monitorObj.Namespace), grafanaPort)
 }

@@ -19,7 +19,7 @@ spec:
     #    port: 17110
     #    prof: 17120
     #    exporterPort: 17130
-    metanodeReservedMem: 67108864
+  #    metanodeReservedMem: 67108864
   #    placement:
   #      nodeAffinity:
   #        requiredDuringSchedulingIgnoredDuringExecution:

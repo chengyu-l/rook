@@ -70,8 +70,8 @@ func (prom *Prometheus) Deploy() error {
 	err := k8sutil.CreateDeployment(clientSet, deployment.Name, deployment.Namespace, deployment)
 	prometheusKey := fmt.Sprintf("%s/%s", deployment.Namespace, deployment.Name)
 	if err != nil {
-		fmt.Println("failed to create prom deployment", err)
 		prom.recorder.Eventf(prom.monitorObj, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreatePrometheusFailed, prometheusKey)
+		return errors.Wrapf(err, MessageCreatePrometheusFailed, serviceKey)
 	}
 
 	prom.recorder.Eventf(prom.monitorObj, corev1.EventTypeNormal, constants.SuccessCreated, MessagePrometheusCreated, prometheusKey)
@@ -166,12 +166,6 @@ func createVolumes(prometheus *Prometheus) []corev1.Volume {
 				},
 			},
 		},
-		{
-			Name: "prometheus-data",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: prometheus.HostPath,
-			},
-		},
 	}
 }
 
@@ -181,10 +175,6 @@ func createVolumeMounts(prometheus *Prometheus) []corev1.VolumeMount {
 			Name:      "monitor-config",
 			MountPath: "/etc/prometheus/prometheus.yml",
 			SubPath:   "prometheus.yml",
-		},
-		{
-			Name:      "prometheus-data",
-			MountPath: "/prometheus-data",
 		},
 	}
 }

@@ -89,11 +89,17 @@ func (r *ReconcileChubaoObjectStore) Reconcile(request reconcile.Request) (recon
 	logger.Infof("handling cluster object: %s", request.String())
 	if !objectStore.DeletionTimestamp.IsZero() {
 		err = r.deleteObjectStore(objectStore)
+		if err != nil {
+			logger.Errorf("deleteObjectStore key:%v err:%v", request.NamespacedName.String(), err)
+		}
 		return reconcile.Result{}, err
 	}
 
 	chubaoapi.SetObjectStoreDefault(objectStore)
 	err = r.createObjectStore(objectStore)
+	if err != nil {
+		logger.Errorf("createObjectStore key:%v err:%v", request.NamespacedName.String(), err)
+	}
 	return reconcile.Result{}, err
 }
 

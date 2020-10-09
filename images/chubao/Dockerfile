@@ -20,8 +20,7 @@ ARG TINI_VERSION
 # Run tini as PID 1 and avoid signal handling issues
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH} /bin/tini
 
-COPY prometheus /etc/prometheus
-COPY grafana /etc/grafana
+COPY monitor /monitor
 ADD rook /usr/local/bin/
 
 RUN chmod +x /bin/tini && chmod +x /usr/local/bin/rook

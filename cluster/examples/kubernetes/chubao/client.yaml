@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chubaofs-client
-  namespace: default
+  name: rook-cfs-client
+  namespace: rook-chubao
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: chubaofs-client
+      app: rook-cfs-client
   template:
     metadata:
       labels:
-        app: chubaofs-client
+        app: rook-cfs-client
     spec:
       containers:
         - name: client
@@ -20,7 +20,7 @@ spec:
           command: ["/bin/bash"]
           args: [
             "-c",
-            "/cfs/bin/start.sh client master-service.rook-chubao.svc.cluster.local:17110 rook-chubao-vol-demo rook-user; sleep 9999999d",
+            "/cfs/bin/start.sh client master-service.rook-chubao.svc.cluster.local:17110 demovol demouser; sleep 9999999d",
           ]
           securityContext:
             privileged: true

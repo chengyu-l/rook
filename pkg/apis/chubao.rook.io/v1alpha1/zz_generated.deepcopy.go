@@ -617,11 +617,6 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		copy(*out, *in)
 	}
 	in.Resources.DeepCopyInto(&out.Resources)
-	if in.HostPath != nil {
-		in, out := &in.HostPath, &out.HostPath
-		*out = new(v1.HostPathVolumeSource)
-		(*in).DeepCopyInto(*out)
-	}
 	return
 }
 

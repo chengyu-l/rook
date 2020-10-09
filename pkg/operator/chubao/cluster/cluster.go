@@ -47,17 +47,22 @@ func (r *ReconcileChubaoCluster) Reconcile(request reconcile.Request) (reconcile
 	logger.Infof("handling cluster object: %s", request.String())
 	if !cluster.DeletionTimestamp.IsZero() {
 		err = r.deleteCluster(cluster)
+		if err != nil {
+			logger.Errorf("deleteCluster key:%v err:%v", request.NamespacedName.String(), err)
+		}
 		return reconcile.Result{}, err
 	}
 
 	// new
 	chubaoapi.SetDefault(cluster)
 	err = r.createCluster(cluster)
+	if err != nil {
+		logger.Errorf("createCluster key:%v err:%v", request.NamespacedName.String(), err)
+	}
 	return reconcile.Result{}, err
 }
 
 func (r *ReconcileChubaoCluster) deleteCluster(cluster *chubaoapi.ChubaoCluster) error {
-	logger.Infof("deleteCluster: %v\n", cluster)
 	return nil
 }
 

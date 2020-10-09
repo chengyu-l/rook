@@ -111,11 +111,17 @@ func (r *ReconcileChubaoMonitor) Reconcile(request reconcile.Request) (reconcile
 	logger.Infof("handling monitor object: %s", request.String())
 	if !monitor.DeletionTimestamp.IsZero() {
 		err = r.deleteMonitor(monitor)
+		if err != nil {
+			logger.Errorf("deleteMonitor key:%v err:%v", request.NamespacedName.String(), err)
+		}
 		return reconcile.Result{}, err
 	}
 
 	chubaoapi.SetMonitorDefault(monitor)
 	err = r.createMonitor(monitor)
+	if err != nil {
+		logger.Errorf("createMonitor key:%v err:%v", request.NamespacedName.String(), err)
+	}
 	return reconcile.Result{}, err
 }
 
@@ -130,8 +136,8 @@ func (r *ReconcileChubaoMonitor) deleteMonitor(monitor *chubaoapi.ChubaoMonitor)
 func (r *ReconcileChubaoMonitor) createMonitor(monitor *chubaoapi.ChubaoMonitor) error {
 	ownerRef := newMonitorOwnerRef(monitor)
 	monitorKey := fmt.Sprintf("%s/%s", monitor.Namespace, monitor.Name)
-	err := createNewConfigMap(monitor)
-	if err != nil {
+	mc := New(r.ClientSet, r.Recorder, monitor, ownerRef)
+	if err := mc.Deploy(); err != nil {
 		r.Recorder.Eventf(monitor, corev1.EventTypeWarning, constants.ErrCreateFailed, MessageCreateConfigMapFailed, monitorKey)
 		return errors.Wrap(err, "failed to create configmap")
 	}
@@ -157,8 +163,8 @@ func (r *ReconcileChubaoMonitor) createMonitor(monitor *chubaoapi.ChubaoMonitor)
 		return errors.Wrap(err, "failed to deploy console")
 	}
 	r.Recorder.Eventf(monitor, corev1.EventTypeNormal, constants.SuccessCreated, MessageConsoleCreated, monitorKey)
-	//r.startMonitoring(r.stopCh, monitor)
-	return nil
+
+	return createMonitorIngress(r.ClientSet, r.Recorder, monitor, ownerRef)
 }
 
 func newMonitorOwnerRef(own metav1.Object) metav1.OwnerReference {

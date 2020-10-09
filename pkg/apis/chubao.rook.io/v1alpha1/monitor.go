@@ -4,7 +4,7 @@ const (
 	defaultPrometheusImage  = "prom/prometheus:v2.13.1"
 	defaultGrafanaImage     = "grafana/grafana:6.4.4"
 	defaultConsoleImage     = "chubaofs/cfs-server:0.0.1"
-	defaultConsoleReplicas  = 3
+	defaultConsoleReplicas  = 1
 	defaultConsolePort      = 17610
 	defaultClusterName      = "mycluster"
 	defaultObjectNodeDomain = "console.chubaofs.com"

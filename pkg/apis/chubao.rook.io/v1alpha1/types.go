@@ -286,7 +286,6 @@ type PrometheusSpec struct {
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	ConsulUrl        string                    `json:"consulUrl"`
 	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
-	HostPath         *v1.HostPathVolumeSource  `json:"hostPath,omitempty"`
 }
 
 type GrafanaSpec struct {
