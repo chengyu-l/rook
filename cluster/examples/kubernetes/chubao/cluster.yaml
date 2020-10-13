@@ -1,0 +1,135 @@
+---
+apiVersion: chubao.rook.io/v1alpha1
+kind: ChubaoCluster
+metadata:
+  name: mycluster
+  namespace: rook-chubao
+spec:
+  image: chubaofs/cfs-server:0.0.1
+  imagePullPolicy: IfNotPresent
+  dataDirHostPath: /var/lib/chubao
+  logDirHostPath: /var/log/chubao
+  #  imagePullSecrets: ""
+  #  priorityClassName: chubaofs-high-priority
+  #  cleanupPolicy: None
+  master:
+    replicas: 4
+    #    logLevel: "error"
+    #    retainLogs: 2000
+    #    port: 17110
+    #    prof: 17120
+    #    exporterPort: 17130
+  #    metanodeReservedMem: 67108864
+  #    placement:
+  #      nodeAffinity:
+  #        requiredDuringSchedulingIgnoredDuringExecution:
+  #          nodeSelectorTerms:
+  #            - matchExpressions:
+  #                - key: "rook-chubao-master"
+  #                  operator: In
+  #                  values:
+  #                    - enabled
+  metaNode:
+    totalMem: 26843545600
+    #    zone: ""
+    #    logLevel: "error"
+    #    port: 17210
+    #    prof: 17220
+    #    exporterPort: 17230
+    #    raftHeartbeatPort: 17240
+    #    raftReplicaPort: 17250
+  #    placement:
+  #      nodeAffinity:
+  #        requiredDuringSchedulingIgnoredDuringExecution:
+  #          nodeSelectorTerms:
+  #            - matchExpressions:
+  #                - key: "rook-chubao-metanode"
+  #                  operator: In
+  #                  values:
+  #                    - enabled
+  dataNode:
+    #    zone: ""
+    #    logLevel: "error"
+    #    port: 17310
+    #    prof: 17320
+    #    exporterPort: 17330
+    #    raftHeartbeatPort: 17340
+    #    raftReplicaPort: 17350
+    disks:
+      - /data0:21474836480
+  #    placement:
+  #      nodeAffinity:
+  #        requiredDuringSchedulingIgnoredDuringExecution:
+  #          nodeSelectorTerms:
+  #            - matchExpressions:
+  #                - key: "rook-chubao-datanode"
+  #                  operator: In
+  #                  values:
+  #                    - enabled
+  #  consul:
+  #    port: 8500
+  #    image: consul:1.6.1
+  #    resources:
+  #      limits:
+  #        cpu: "500m"
+  #        memory: "1024Mi"
+  #      requests:
+  #        cpu: "500m"
+  #        memory: "1024Mi"
+  #    placement:
+  #      nodeAffinity:
+  #        requiredDuringSchedulingIgnoredDuringExecution:
+  #          nodeSelectorTerms:
+  #            - matchExpressions:
+  #                - key: "rook-chubao/cluster"
+  #                  operator: In
+  #                  values:
+  #                    - consul
+  provisioner:
+    driverName: "csi.chubaofs.com"
+    kubeletPath: /var/lib/kubelet
+    #    placement:
+    #      nodeAffinity:
+    #        requiredDuringSchedulingIgnoredDuringExecution:
+    #          nodeSelectorTerms:
+    #            - matchExpressions:
+    #                - key: "rook-chubao-csi-node"
+    #                  operator: In
+    #                  values:
+    #                    - enabled
+    csiChubaoFS:
+      image: chubaofs/cfs-csi-driver:2.2.1.110.0
+      #      resources:
+      #        limits:
+      #          cpu: "500m"
+      #          memory: "1024Mi"
+      #        requests:
+      #          cpu: "500m"
+      #          memory: "1024Mi"
+    #    csiProvisioner:
+    #      image: quay.io/k8scsi/csi-provisioner:v1.6.0
+    #      resources:
+    #        limits:
+    #          cpu: "500m"
+    #          memory: "1024Mi"
+    #        requests:
+    #          cpu: "500m"
+    #          memory: "1024Mi"
+    #    csiAttacher:
+    #      image: quay.io/k8scsi/csi-attacher:v2.0.0
+    #      resources:
+    #        limits:
+    #          cpu: "500m"
+    #          memory: "1024Mi"
+    #        requests:
+    #          cpu: "500m"
+    #          memory: "1024Mi"
+    #    csiRegister:
+    #      image: quay.io/k8scsi/csi-node-driver-registrar:v1.3.0
+    #      resources:
+    #        limits:
+    #          cpu: "500m"
+    #          memory: "1024Mi"
+    #        requests:
+    #          cpu: "500m"
+    #          memory: "1024Mi"

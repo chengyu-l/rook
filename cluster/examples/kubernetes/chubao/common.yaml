@@ -1,0 +1,129 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rook-chubao-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rook-chubao
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: chubaoclusters.chubao.rook.io
+spec:
+  group: chubao.rook.io
+  names:
+    kind: ChubaoCluster
+    listKind: ChubaoClusterList
+    plural: chubaoclusters
+    singular: chubaocluster
+  scope: Namespaced
+  version: v1alpha1
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: chubaomonitors.chubao.rook.io
+spec:
+  group: chubao.rook.io
+  names:
+    kind: ChubaoMonitor
+    listKind: ChubaoMonitorList
+    plural: chubaomonitors
+    singular: chubaomonitor
+  scope: Namespaced
+  version: v1alpha1
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: chubaoobjectstores.chubao.rook.io
+spec:
+  group: chubao.rook.io
+  names:
+    kind: ChubaoObjectStore
+    listKind: ChubaoObjectStoreList
+    plural: chubaoobjectstores
+    singular: chubaoobjectstore
+  scope: Namespaced
+  version: v1alpha1
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rook-chubao-operator
+rules:
+  - apiGroups:
+      - chubao.rook.io
+    resources: ["*"]
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - daemonsets
+      - replicasets
+      - statefulsets
+    verbs:
+      - "*"
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+      - pods
+      - services
+      - services/finalizers
+      - endpoints
+      - persistentvolumes
+      - persistentvolumeclaims
+      - events
+      - configmaps
+      - secrets
+    verbs:
+      - "*"
+  - apiGroups:
+      - extensions
+      - networking.k8s.io   # k8s 1.14+
+    resources:
+      - ingresses
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+---
+# ServiceAccount for chubao-operator. Serves as its authorization identity.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rook-chubao-operator
+  namespace: rook-chubao-system
+---
+# Bind chubao-operator ServiceAccount with ClusterRole.
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: rook-chubao-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rook-chubao-operator
+subjects:
+  - kind: ServiceAccount
+    name: rook-chubao-operator
+    namespace: rook-chubao-system
+---

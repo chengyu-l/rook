@@ -17,6 +17,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rook/rook/cmd/rook/chubao"
 
 	"github.com/rook/rook/cmd/rook/cassandra"
 	"github.com/rook/rook/cmd/rook/ceph"
@@ -42,6 +43,7 @@ func addCommands() {
 		discoverCmd,
 		// backend commands
 		ceph.Cmd,
+		chubao.Cmd,
 		cockroachdb.Cmd,
 		edgefs.Cmd,
 		nfs.Cmd,

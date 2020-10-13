@@ -24,6 +24,8 @@ import (
 	fakecassandrav1alpha1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/cassandra.rook.io/v1alpha1/fake"
 	cephv1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/ceph.rook.io/v1"
 	fakecephv1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/ceph.rook.io/v1/fake"
+	chubaov1alpha1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/chubao.rook.io/v1alpha1"
+	fakechubaov1alpha1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/chubao.rook.io/v1alpha1/fake"
 	cockroachdbv1alpha1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/cockroachdb.rook.io/v1alpha1"
 	fakecockroachdbv1alpha1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/cockroachdb.rook.io/v1alpha1/fake"
 	edgefsv1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/edgefs.rook.io/v1"
@@ -98,6 +100,11 @@ func (c *Clientset) CassandraV1alpha1() cassandrav1alpha1.CassandraV1alpha1Inter
 // CephV1 retrieves the CephV1Client
 func (c *Clientset) CephV1() cephv1.CephV1Interface {
 	return &fakecephv1.FakeCephV1{Fake: &c.Fake}
+}
+
+// ChubaoV1alpha1 retrieves the ChubaoV1alpha1Client
+func (c *Clientset) ChubaoV1alpha1() chubaov1alpha1.ChubaoV1alpha1Interface {
+	return &fakechubaov1alpha1.FakeChubaoV1alpha1{Fake: &c.Fake}
 }
 
 // CockroachdbV1alpha1 retrieves the CockroachdbV1alpha1Client

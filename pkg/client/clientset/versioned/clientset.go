@@ -23,6 +23,7 @@ import (
 
 	cassandrav1alpha1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/cassandra.rook.io/v1alpha1"
 	cephv1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/ceph.rook.io/v1"
+	chubaov1alpha1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/chubao.rook.io/v1alpha1"
 	cockroachdbv1alpha1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/cockroachdb.rook.io/v1alpha1"
 	edgefsv1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/edgefs.rook.io/v1"
 	nfsv1alpha1 "github.com/rook/rook/pkg/client/clientset/versioned/typed/nfs.rook.io/v1alpha1"
@@ -38,6 +39,7 @@ type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	CassandraV1alpha1() cassandrav1alpha1.CassandraV1alpha1Interface
 	CephV1() cephv1.CephV1Interface
+	ChubaoV1alpha1() chubaov1alpha1.ChubaoV1alpha1Interface
 	CockroachdbV1alpha1() cockroachdbv1alpha1.CockroachdbV1alpha1Interface
 	EdgefsV1() edgefsv1.EdgefsV1Interface
 	NfsV1alpha1() nfsv1alpha1.NfsV1alpha1Interface
@@ -52,6 +54,7 @@ type Clientset struct {
 	*discovery.DiscoveryClient
 	cassandraV1alpha1   *cassandrav1alpha1.CassandraV1alpha1Client
 	cephV1              *cephv1.CephV1Client
+	chubaoV1alpha1      *chubaov1alpha1.ChubaoV1alpha1Client
 	cockroachdbV1alpha1 *cockroachdbv1alpha1.CockroachdbV1alpha1Client
 	edgefsV1            *edgefsv1.EdgefsV1Client
 	nfsV1alpha1         *nfsv1alpha1.NfsV1alpha1Client
@@ -68,6 +71,11 @@ func (c *Clientset) CassandraV1alpha1() cassandrav1alpha1.CassandraV1alpha1Inter
 // CephV1 retrieves the CephV1Client
 func (c *Clientset) CephV1() cephv1.CephV1Interface {
 	return c.cephV1
+}
+
+// ChubaoV1alpha1 retrieves the ChubaoV1alpha1Client
+func (c *Clientset) ChubaoV1alpha1() chubaov1alpha1.ChubaoV1alpha1Interface {
+	return c.chubaoV1alpha1
 }
 
 // CockroachdbV1alpha1 retrieves the CockroachdbV1alpha1Client
@@ -129,6 +137,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.chubaoV1alpha1, err = chubaov1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.cockroachdbV1alpha1, err = cockroachdbv1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -167,6 +179,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.cassandraV1alpha1 = cassandrav1alpha1.NewForConfigOrDie(c)
 	cs.cephV1 = cephv1.NewForConfigOrDie(c)
+	cs.chubaoV1alpha1 = chubaov1alpha1.NewForConfigOrDie(c)
 	cs.cockroachdbV1alpha1 = cockroachdbv1alpha1.NewForConfigOrDie(c)
 	cs.edgefsV1 = edgefsv1.NewForConfigOrDie(c)
 	cs.nfsV1alpha1 = nfsv1alpha1.NewForConfigOrDie(c)
@@ -183,6 +196,7 @@ func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.cassandraV1alpha1 = cassandrav1alpha1.New(c)
 	cs.cephV1 = cephv1.New(c)
+	cs.chubaoV1alpha1 = chubaov1alpha1.New(c)
 	cs.cockroachdbV1alpha1 = cockroachdbv1alpha1.New(c)
 	cs.edgefsV1 = edgefsv1.New(c)
 	cs.nfsV1alpha1 = nfsv1alpha1.New(c)

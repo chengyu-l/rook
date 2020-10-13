@@ -1,0 +1,51 @@
+---
+apiVersion: chubao.rook.io/v1alpha1
+kind: ChubaoObjectStore
+metadata:
+  name: myobjectstore
+  namespace: rook-chubao
+spec:
+  image: chubaofs/cfs-server:0.0.1
+  imagePullPolicy: IfNotPresent
+  replicas: 3
+  masterAddr: "master-service.rook-chubao.svc.cluster.local:17110"
+  consulURL: "http://consul-service.rook-chubao.svc.cluster.local:8500"
+  domains: "objectnode.chubaofs.com"
+  #  logLevel: "error"
+  #  port: 17510
+  #  prof: 17520
+  #  exporterPort: 17550
+  #  imagePullSecrets: ""
+#  resources:
+#    limits:
+#      cpu: "500m"
+#      memory: "1024Mi"
+#    requests:
+#      cpu: "500m"
+#      memory: "1024Mi"
+#  placement:
+#    nodeAffinity:
+#      requiredDuringSchedulingIgnoredDuringExecution:
+#        nodeSelectorTerms:
+#          - matchExpressions:
+#              - key: "rook-chubao-objectstore"
+#                operator: In
+#                values:
+#                  - enabled
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: chubao-objectstore-ingress
+  namespace: rook-chubao
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+    - host: objectnode.chubaofs.com
+      http:
+        paths:
+          - backend:
+              serviceName: objectnode-service
+              servicePort: 17510
+---
